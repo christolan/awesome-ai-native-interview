@@ -57,6 +57,10 @@ templates/  # 使用模板
 ### curated
 只保留真正值得长期复习和复用的内容。
 
+## 已沉淀面试题索引
+
+- [What Is Streaming Response and Why Does It Matter in AI Native Apps?](./curated/what-is-streaming-and-why-it-matters-in-ai-native-apps.md)
+
 ## 收录原则
 
 不是所有 daily 内容都会进入 curated。
