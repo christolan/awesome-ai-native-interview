@@ -60,6 +60,7 @@ templates/  # 使用模板
 ## 已沉淀面试题索引
 
 - [What Is Streaming Response and Why Does It Matter in AI Native Apps?](./curated/what-is-streaming-and-why-it-matters-in-ai-native-apps.md)
+- [Why You Can't Keep Appending Full Chat History to an LLM](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
 
 ## 收录原则
 
