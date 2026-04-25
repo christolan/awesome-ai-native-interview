@@ -62,6 +62,7 @@ templates/  # 使用模板
 - [What Is Streaming Response and Why Does It Matter in AI Native Apps?](./curated/what-is-streaming-and-why-it-matters-in-ai-native-apps.md)
 - [Why You Can't Keep Appending Full Chat History to an LLM](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
 - [How to Design Streaming AI Chat on the Frontend](./curated/how-to-design-streaming-ai-chat-on-the-frontend.md)
+- [How to Optimize First-Paint and Long-List Performance on Low-End Devices](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
 
 ## 收录原则
 
