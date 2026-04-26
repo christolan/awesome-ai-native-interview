@@ -63,6 +63,7 @@ templates/  # 使用模板
 - [Why You Can't Keep Appending Full Chat History to an LLM](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
 - [How to Design Streaming AI Chat on the Frontend](./curated/how-to-design-streaming-ai-chat-on-the-frontend.md)
 - [How to Optimize First-Paint and Long-List Performance on Low-End Devices](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
+- [Token → Embedding → Vector Database: The AI Data Pipeline](./curated/token-embedding-vector-database-data-pipeline.md)
 
 ## 收录原则
 
