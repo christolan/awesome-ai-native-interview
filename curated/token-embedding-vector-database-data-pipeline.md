@@ -1,69 +1,45 @@
-# Token → Embedding → Vector Database
+# Token → Embedding → Vector Database: The AI Native Data Pipeline
 
-> AI Native 应用数据链路的三个层次
+## Interview Question
 
-## 一句话总结
+请解释以下三个概念的区别，并给出一个实际场景说明它们如何协同工作：
 
-| 概念 | 打个比方 | 一句话 |
-|---|---|---|
-| **Token** | 🔤 文字碎块 | LLM 处理语言的基本单位 |
-| **Embedding** | 🗺️ 语义坐标 | 把文字变成"语义空间"里的一个点 |
-| **Vector DB** | 📇 语义搜索引擎 | 按"语义相似度"快速找到最相关的内容 |
+**Token → Embedding → Vector Database**
 
-## Token — 大模型的基本单位
+## Why this question matters
 
-Token 是大语言模型的最小输入/输出单位。无论是用户输入的文字，还是模型生成的回答，都先被分解成 token 序列。LLM 的工作方式本质上就是：
+这道题用于考察对 AI Native 应用**数据链路**的基础理解。Token、Embedding、Vector Database 是 RAG、语义搜索、记忆系统等 AI 场景的底层基石。不理解这三者的关系，就无法真正理解 RAG，也无法理解为什么 AI 应用需要向量数据库而不是传统 SQL。
 
-> 给定当前 token 序列，预测下一个最可能的 token，反复迭代直到生成完整结果。
+一个清晰的回答应该能把这三个概念从"是什么"讲到"为什么"再到"如何协同"——光背定义不够，能串起 RAG 链路才是加分点。
 
-## Embedding — 把文字变成数字
+## Reference Answer
 
-**核心问题：** LLM 不认识汉字和英文单词，只认识数字。Embedding 解决了这个"语义 → 数学"的转化问题。
+Token、Embedding、Vector Database 是 AI Native 应用数据链路中的三个层次，从"文字碎块"到"语义坐标"再到"语义搜索引擎"。
 
-**Embedding 模型**将每个 token 或整段文本映射为一个**固定维度的浮点数向量**（如 1536 维数组）。
+**Token** 是大语言模型处理文字的基本单位。无论输入还是输出，LLM 都在做同一件事：给定一系列 token，预测下一个最可能的 token，反复迭代直到生成完整结果。
 
-```
-"苹果" → [0.12, -0.87, 0.33, 0.01, ..., 0.55]  (1536 个数字)
-"香蕉" → [0.14, -0.85, 0.30, 0.02, ..., 0.52]
-"汽车" → [0.92, 0.11, -0.76, 0.45, ..., -0.33]
-```
+**Embedding** 解决的是"机器不认识文字，只认识数字"的问题。Embedding 模型会把每个 token 或整段文本映射成一个固定长度的浮点数向量（比如 1536 维）。关键性质是：语义相近的文本，它们在向量空间中的距离也相近。"苹果"和"香蕉"的向量距离很近，"苹果"和"汽车"的向量距离很远。这就像给每段文字在语义空间中打了一个"坐标"。
 
-关键性质：**语义相近的文本，向量距离（cosine similarity）也更近。** 这就像用经纬度定位城市——北京的坐标离天津近，离纽约远。Embedding 就是在"语义空间"里给每段文字标了一个坐标。
+**Vector Database** 解决的是"高效语义检索"的问题。当你拥有 100 万份文档的 Embedding 向量后，用户问一个问题，你需要找出最相关的几篇。你不能一个个遍历比较——太慢了。Vector DB 通过专门的索引结构（如 HNSW、IVF）把最近邻搜索加速到毫秒级，同时提供增删改查、元数据过滤等生产级能力。代表产品：Pinecone、Weaviate、Qdrant、Milvus、Chroma。
 
-## Vector Database — 高效语义检索
+**三者协同：RAG 场景**
 
-**核心问题：** 如果有 100 万篇文档都转成了 Embedding 向量，用户问一个问题，你怎么快速找到最相关的几篇？
+用户提问"最新的报销政策是什么？"→
+1. **Token** 化：把问题分解成 token 序列
+2. 输入 **Embedding** 模型 → 得到语义向量
+3. 用该向量到 **Vector Database** 中检索最相关的 3 篇文档
+4. 把"问题 + 检索到的文档"拼接成 Prompt 发给 LLM
 
-你不能逐个遍历比较——太慢了。Vector Database 通过专门的索引结构（如 HNSW、IVF、DiskANN）将近似最近邻搜索加速到**毫秒级**，同时支持增删改查、元数据过滤等生产级能力。
+这样 LLM 就有了事实依据，避免了生编硬造。这就是 RAG（Retrieval-Augmented Generation）的核心链路。
 
-代表产品：Pinecone、Weaviate、Qdrant、Milvus、Chroma。
+## Follow-up Questions
 
-## 三者如何协同：RAG 全链路
+- Embedding 模型和 LLM 本身是同一个模型吗？它们分别负责什么？
+- Vector Database 和传统数据库（如 MySQL、Elasticsearch）在语义搜索场景下有什么本质区别？
+- 如果 RAG 检索回来的文档和用户问题其实不太相关，会发生什么？怎么缓解？
 
-```
-用户提问："最新的报销政策是什么？"
+## Notes
 
-  ① Token 化
-  "最新的报销政策是什么？" → [CLS] "最" "新" "的" "报" "销" "政" "策" "是" "什" "么" "？"
-
-  ② Embedding 化
-  以上 token 序列 → Embedding 模型 → 1536 维向量 [0.01, -0.23, ...]
-
-  ③ Vector DB 检索
-  该向量 → Vector DB 近似最近邻搜索 → 最相关的 3 篇文档
-    → "2026年差旅报销标准更新_v3.docx"  (距离 0.12)
-    → "费用报销流程指引_财务部发布"       (距离 0.15)
-    → "员工福利手册_2025版"              (距离 0.48)
-
-  ④ LLM 回答
-  Prompt = "用户问题 + 以上 3 篇文档"
-  → LLM 基于事实回答，避免生编硬造
-```
-
-这套链路就是 **RAG（Retrieval-Augmented Generation）** 的核心——让 LLM 在回答时先检索知识库，再基于检索结果生成答案，从根本上解决了 LLM 知识陈旧和幻觉问题。
-
-## 延伸阅读
-
-- [RAG 技术详解](./how-rag-works.md)（拟）
-- [Embedding 模型选型指南](./embedding-model-selection.md)（拟）
-- [Vector Database 选型对比](./vector-db-comparison.md)（拟）
+- Token 是 LLM 的输入/输出单位，Embedding 是语义向量化，Vector DB 是语义检索引擎——三者各司其职
+- Embedding 模型通常独立于生成模型（如 OpenAI 的 `text-embedding-ada-002` 与 `gpt-4` 是两个不同模型）
+- RAG 是这三者最典型的协同场景，也是 AI Native 工程师面试的高频考点
