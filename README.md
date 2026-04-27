@@ -64,6 +64,7 @@ templates/  # 使用模板
 - [如何在前端设计 Streaming AI 聊天交互？](./curated/how-to-design-streaming-ai-chat-on-the-frontend.md)
 - [如何在低端设备上优化首屏渲染与长列表性能？](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
 - [Token → Embedding → 向量数据库：AI 数据流水线全解析](./curated/token-embedding-vector-database-data-pipeline.md)
+- [什么是 RAG？它解决了 LLM 的哪些问题？](./curated/what-is-rag-and-why-it-matters.md)
 
 ## 收录原则
 
