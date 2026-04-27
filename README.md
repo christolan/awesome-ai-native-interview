@@ -59,11 +59,11 @@ templates/  # 使用模板
 
 ## 已沉淀面试题索引
 
-- [What Is Streaming Response and Why Does It Matter in AI Native Apps?](./curated/what-is-streaming-and-why-it-matters-in-ai-native-apps.md)
-- [Why You Can't Keep Appending Full Chat History to an LLM](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
-- [How to Design Streaming AI Chat on the Frontend](./curated/how-to-design-streaming-ai-chat-on-the-frontend.md)
-- [How to Optimize First-Paint and Long-List Performance on Low-End Devices](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
-- [Token → Embedding → Vector Database: The AI Data Pipeline](./curated/token-embedding-vector-database-data-pipeline.md)
+- [什么是 Streaming 响应，为什么它在 AI Native 应用中很重要？](./curated/what-is-streaming-and-why-it-matters-in-ai-native-apps.md)
+- [为什么不能无限把完整聊天记录追加给 LLM？](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
+- [如何在前端设计 Streaming AI 聊天交互？](./curated/how-to-design-streaming-ai-chat-on-the-frontend.md)
+- [如何在低端设备上优化首屏渲染与长列表性能？](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
+- [Token → Embedding → 向量数据库：AI 数据流水线全解析](./curated/token-embedding-vector-database-data-pipeline.md)
 
 ## 收录原则
 
