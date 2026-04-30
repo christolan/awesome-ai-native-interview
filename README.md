@@ -67,6 +67,7 @@ templates/  # 使用模板
 - [什么是 RAG？它解决了 LLM 的哪些问题？](./curated/what-is-rag-and-why-it-matters.md)
 - [Transformer 推理流程全解析：注意力、FFN、KV Cache 到 Token 采样](./curated/how-transformer-inference-works-attention-ffn-kvcache-sampling.md)
 - [如何在 AI 对话产品中实现图片上传与图文混合问答？](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
+- [大模型采样三参数详解：temperature、top_k、top_p](./curated/llm-sampling-temperature-topk-topp.md)
 
 ## 收录原则
 
