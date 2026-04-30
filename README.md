@@ -68,6 +68,7 @@ templates/  # 使用模板
 - [Transformer 推理流程全解析：注意力、FFN、KV Cache 到 Token 采样](./curated/how-transformer-inference-works-attention-ffn-kvcache-sampling.md)
 - [如何在 AI 对话产品中实现图片上传与图文混合问答？](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
 - [大模型采样三参数详解：temperature、top_k、top_p](./curated/llm-sampling-temperature-topk-topp.md)
+- [Beam Search 详解：原理、优缺点与工程取舍](./curated/beam-search-vs-sampling-decoding-strategies.md)
 
 ## 收录原则
 
