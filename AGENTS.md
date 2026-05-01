@@ -39,20 +39,11 @@
 
 ### 3. 归档（用户要求时执行）
 
-创建 `daily/YYYY-MM-DD.md`，包含以下章节（按顺序）：
+创建 `daily/YYYY-MM-DD.md`，格式参考 `templates/daily-question.md`。
 
-```
-# YYYY-MM-DD
-## Question
-## Why this matters
-## Expected points
-## Your Answer        ← 若用户说"不会"/"直接给答案"则省略此节，改为 ## AI Explanation
-## Review             ← 同上省略
-## Improved Answer
-## Decision
-```
-
+补充说明：
 - 忠实保留用户的原始回答
+- 若用户说"不会"/"直接给答案"，省略 `## Your Answer` 和 `## Review`，改为 `## AI Explanation`
 - Review 采用教练风格：先优点，再不足
 - Decision 写明是否 promote to curated 及原因
 
@@ -63,15 +54,7 @@
 - 答案有长期复用价值
 - 内容整理后适合独立阅读
 
-创建 `curated/<slug>.md`，**严格遵循以下章节顺序，不得改名或新增顶层章节**：
-
-```
-## Interview Question
-## Why this question matters
-## Reference Answer
-## Follow-up Questions
-## Notes
-```
+创建 `curated/<slug>.md`，格式参考 `templates/curated-entry.md`，**章节标题不得改名或新增顶层章节**。
 
 同时在 `README.md` 的"已沉淀面试题索引"列表中追加对应链接。
 
