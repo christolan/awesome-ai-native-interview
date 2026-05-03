@@ -30,3 +30,4 @@ AGENTS.md    AI 协作维护指南
 - [如何在 AI 对话产品中实现图片上传与图文混合问答？](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
 - [大模型采样三参数详解：temperature、top_k、top_p](./curated/llm-sampling-temperature-topk-topp.md)
 - [Beam Search 详解：原理、优缺点与工程取舍](./curated/beam-search-vs-sampling-decoding-strategies.md)
+- [LLM Function Calling 机制详解：触发条件、消息数组与循环链路](./curated/understanding-llm-function-calling-mechanism.md)
