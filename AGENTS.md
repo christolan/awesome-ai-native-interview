@@ -19,6 +19,7 @@
 | `daily/` | 每日训练记录，文件名为 `YYYY-MM-DD.md` |
 | `curated/` | 精选参考答案，文件名为英文 slug，如 `what-is-rag-and-why-it-matters.md` |
 | `templates/` | 写作模板，不直接修改 |
+| `assets/` | 静态资源存放，如配图、截图等图片文件 |
 
 ---
 
