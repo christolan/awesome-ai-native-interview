@@ -1,37 +1,37 @@
-# Why Infinite Chat History Breaks Your LLM App
+# 为什么无限追加聊天历史会毁掉你的 LLM 应用
 
-It's the most natural instinct in the world: you're building a chat product, the user has been talking for 30 turns, and you think — "the more context I give the model, the better the answer will be, right?" So you keep appending. Every message, every response, line after line, into a single ever-growing prompt.
+这是世界上最自然的直觉：你在构建一个聊天产品，用户已经聊了 30 轮，你想——"我喂给模型的上下文越多，答案就会越好，对吧？"于是你不断追加。每条消息、每个回复，一行接一行，塞进一个不断膨胀的 prompt 里。
 
-It works fine at first. Ten turns? No problem. Twenty? Still coherent. Then somewhere around turn 40, things start to unravel. Responses get slower. Costs creep up. And worst of all, the model starts drifting — bringing up topics from 20 minutes ago, contradicting what was just said, or confidently repeating outdated information. If you've built an LLM-powered product, you've almost certainly hit this wall.
+一开始还行。十轮？没问题。二十轮？仍然连贯。然后大约在第四十轮左右，事情开始崩坏。回复变慢了。成本悄悄攀升。最糟糕的是，模型开始跑偏——提起二十分钟前的话题，与刚刚说的内容矛盾，或者自信地重复过时的信息。如果你构建过 LLM 驱动的产品，你几乎一定撞过这堵墙。
 
-The instinct to just append everything is wrong for at least four distinct reasons, and understanding them is the difference between a prototype that impresses in a demo and a product that actually works at scale.
+"只管全部追加"的直觉是错误的，至少有四个截然不同的原因，理解它们，是区分一个在 demo 中令人惊艳的原型和一个真正能在规模上运行的产品之间的关键。
 
-**The obvious ceiling: context windows are finite.** Every model has a hard limit on input tokens — 128K for GPT-4o, 200K for Claude, 1M for Gemini 2.5 Pro. Those numbers sound enormous until you realize that a moderately chatty user can burn through 100K tokens in a single long session. When you hit the ceiling, you have two bad options: truncate from the beginning (losing potentially critical early context) or refuse to continue. Both are terrible product experiences.
+**最明显的天花板：上下文窗口是有限的。** 每个模型对输入 token 都有硬性上限——GPT-4o 是 128K，Claude 是 200K，Gemini 2.5 Pro 是 1M。这些数字听起来很大，直到你意识到一个中等健谈的用户在单次长会话中就能烧掉 100K 个 token。当你撞到天花板时，你只有两个糟糕的选择：从头截断（可能丢失关键的早期上下文），或者拒绝继续。两者都是糟糕的产品体验。
 
-**The silent killer: token costs scale with every turn.** Even if you never hit the window limit, the economics break down. A 50-turn conversation might cost 10× more in input tokens than a 5-turn one, and input tokens are where the money goes in most pricing models. If you're running a consumer product with millions of users, this isn't a theoretical concern — it's a direct line to unsustainable unit economics. Every message you blindly append is literal money you're burning.
+**沉默的杀手：token 成本随每轮对话累积。** 即使你永远不触及窗口限制，经济账也算不过来。一个 50 轮的对话，输入 token 的成本可能比 5 轮高出 10 倍，而输入 token 正是大多数定价模型中的主要开销。如果你在运营一个拥有数百万用户的消费级产品，这不是一个理论上的担忧——它是一条直接通往不可持续单位经济学的路。你盲目追加的每条消息，都是在燃烧实实在在的钱。
 
-**Latency compounds under load.** Longer prompts mean longer inference times. The attention mechanism scales quadratically with sequence length, so doubling your chat history doesn't just double latency — it can quadruple it. In a streaming chat product where users expect near-instant responses, a 4-second delay feels broken. Stack this across thousands of concurrent users and your infrastructure costs explode alongside your response times.
+**延迟在负载下叠加。** 更长的 prompt 意味着更长的推理时间。注意力机制的计算量随序列长度呈二次增长，所以将聊天历史翻倍不仅仅是把延迟翻倍——它可能让延迟变为原来的四倍。在一个用户期望近乎即时回复的流式聊天产品中，4 秒的延迟已经让人感觉坏了。将这一点乘以数千并发用户，你的基础设施成本会与响应时间一同爆炸。
 
-**Noise drowns signal.** This is the subtlest problem and the one that separates great AI products from mediocre ones. When you dump 40 turns of chat history into a prompt, the model has to sift through greetings, digressions, clarifications, corrections, and dead ends to find what's actually relevant to the current question. Old instructions get conflated with new ones. The model latches onto a detail from 15 turns ago because it looks statistically salient, even though the user has long since moved on. The result: answers that feel unfocused, contradictory, or strangely fixated on the past. More context doesn't mean better answers — it often means noisier ones.
+**噪声淹没信号。** 这是最微妙的问题，也是区分优秀 AI 产品和平庸 AI 产品的关键。当你把 40 轮聊天历史全部倒进 prompt 时，模型必须在问候语、题外话、澄清、纠正和死胡同中翻找，才能找到与当前问题真正相关的内容。旧指令与新指令被混为一谈。模型抓住 15 轮前的一个细节不放，因为它在统计上看起来突出，尽管用户早已翻篇。结果就是：回答感觉不聚焦、自相矛盾，或者奇怪地执着于过去。更多的上下文并不意味着更好的答案——它常常意味着更嘈杂的答案。
 
-So what's the alternative? The answer isn't "send less context," it's "send smarter context." Mature AI products use a **layered context architecture**:
+那么替代方案是什么？答案不是"发送更少的上下文"，而是"发送更聪明的上下文"。成熟的 AI 产品使用**分层上下文架构**：
 
-- **Recent turns stay verbatim.** The last 3–5 exchanges are preserved word-for-word. This maintains conversational coherence and ensures the model can track pronouns, references, and the immediate flow of discussion.
+- **最近的对话保持逐字记录。** 最近 3-5 轮交流被原样保留。这维护了对话连贯性，确保模型能追踪代词、引用和即时的讨论流程。
 
-- **Older turns get compressed into summaries.** Beyond the recent window, the conversation is incrementally summarized — extracting key decisions, important facts, action items, and the user's stated preferences while discarding filler. A good summary preserves semantic value at a fraction of the token cost.
+- **较早的对话被压缩为摘要。** 在最近窗口之外，对话被增量摘要——提取关键决策、重要事实、待办事项和用户声明的偏好，同时丢弃填充内容。一个好的摘要以极小的 token 成本保留了语义价值。
 
-- **Long-term memory lives outside the prompt.** User identity, persistent preferences, goals, and recurring topics are extracted into a structured memory store. This isn't loaded into every prompt; it's selectively injected when relevant, often through a lightweight retrieval step.
+- **长期记忆驻留在 prompt 之外。** 用户身份、持久偏好、目标和反复出现的话题被提取到结构化的记忆存储中。这些不会被加载进每个 prompt；它们在被需要时选择性注入，通常通过一个轻量级的检索步骤。
 
-- **On-demand retrieval fills the gaps.** When a user asks a specific question that references something from much earlier in the conversation (or from a different session entirely), a retrieval system searches the full history and injects only the most relevant fragments into the current prompt. This is RAG applied to conversation history.
+- **按需检索填补空缺。** 当用户问一个涉及对话早期（或不同会话中）内容的特定问题时，检索系统搜索完整历史，只将最相关的片段注入当前 prompt。这就是将 RAG 应用于对话历史。
 
-- **Context triggers automate the transitions.** Rather than manually deciding when to summarize or trim, production systems use heuristics: approaching the token limit, a detected topic shift, or a session crossing a time boundary (e.g., 30 minutes idle) all signal that it's time to compress and reorganize the context.
+- **上下文触发器自动化过渡。** 生产系统使用启发式规则来自动决定何时摘要或裁剪，而不是手动操作：接近 token 限制、检测到话题转移，或会话跨越时间边界（例如空闲 30 分钟）——这些都发出信号表明该压缩和重组上下文了。
 
-The goal isn't "give the model everything." The goal is "give the model the most relevant, cleanest, most cost-effective information for the current task." That's the difference between an LLM integration that works in a blog post and one that works in production.
+目标不是"把一切都给模型"。目标是"为当前任务给模型最相关、最干净、最具成本效益的信息"。这就是一个在博客文章里能工作的 LLM 集成和一个在生产环境中能工作的集成之间的区别。
 
-**Key Takeaways**
+**核心要点**
 
-- Unbounded chat history creates four compounding problems: hard context window limits, escalating token costs, increased inference latency, and degraded answer quality from noise overwhelming signal.
-- Token costs and latency grow with every appended turn, making the "just append everything" approach economically unsustainable at scale.
-- A layered context architecture — recent verbatim, older summaries, persistent memory, on-demand retrieval — keeps prompts lean and relevant without sacrificing continuity.
-- Context management should be automated with triggers (token thresholds, topic shifts, time boundaries) rather than left to manual implementation.
-- The mindset shift: from "maximize information given to the model" to "maximize relevant signal per token consumed."
+- 无界的聊天历史产生四个叠加问题：硬性上下文窗口限制、不断升级的 token 成本、增加推理延迟，以及噪声淹没信号导致的回答质量下降。
+- Token 成本和延迟随每轮追加而增长，使得"只管全部追加"的方法在经济上无法在规模上持续。
+- 分层上下文架构——最近逐字记录、较早摘要、持久记忆、按需检索——在不牺牲连续性的前提下保持 prompt 精简和相关。
+- 上下文管理应通过触发器自动化（token 阈值、话题转移、时间边界），而不是留给手动实现。
+- 思维转变：从"最大化给模型的信息"到"最大化每个 token 消耗所获得的相关信号"。

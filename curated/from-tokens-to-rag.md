@@ -1,53 +1,53 @@
-# From Tokens to RAG: Understanding the AI Native Data Pipeline
+# 从 Token 到 RAG：理解 AI Native 数据管道
 
-Every AI-native application that works with private data — knowledge-base Q&A, enterprise search, customer support bots — rests on a three-layer data pipeline: Token → Embedding → Vector Database. These three building blocks form the foundation of RAG (Retrieval-Augmented Generation), arguably the most important architectural pattern in applied AI today. Understanding how they connect — and where they break — is essential knowledge for any engineer building AI products.
+每一个处理私有数据的 AI Native 应用——知识库问答、企业搜索、客服机器人——都建立在三层数据管道之上：Token → Embedding → Vector Database。这三个构建块构成了 RAG（检索增强生成）的基础，而 RAG 可以说是当今应用 AI 领域最重要的架构模式。理解它们如何连接——以及在哪里会出问题——是每个构建 AI 产品的工程师必须掌握的知识。
 
-## The Three Building Blocks
+## 三个构建块
 
-Let's start at the bottom.
+让我们从最底层开始。
 
-**Token** is the fundamental unit of text processing for large language models. An LLM doesn't see words or sentences; it sees token sequences. Whether processing input or generating output, the model is always doing the same thing: given a sequence of tokens, predict the next most probable token, rinse and repeat. A token might be a whole word ("apple"), a subword fragment ("un" + "believ" + "able"), or a single character — depending on the tokenizer. This is the atomic level of the pipeline.
+**Token** 是大语言模型处理文本的基本单元。LLM 看到的不是单词或句子，而是 token 序列。无论是处理输入还是生成输出，模型始终在做同一件事：给定一个 token 序列，预测下一个最可能的 token，然后循环往复。一个 token 可能是一个完整的单词（"apple"）、一个子词片段（"un" + "believ" + "able"），或者单个字符——这取决于分词器（tokenizer）的设计。这是整个管道中最原子的层级。
 
-**Embedding** solves a more fundamental problem: machines don't understand text, they understand numbers. An embedding model maps each token — or, more commonly, an entire chunk of text — into a fixed-length vector of floating-point numbers (typically hundreds to thousands of dimensions, like OpenAI's 1536-dimensional embeddings). The magic is in the geometry: semantically similar texts end up close together in this vector space. "Apple" and "banana" cluster together; "apple" and "car" sit far apart. Each piece of text gets a coordinate in semantic space — a numerical fingerprint of its meaning.
+**Embedding** 解决了一个更根本的问题：机器不理解文本，机器只理解数字。嵌入模型将每个 token——或者更常见的是，将一整块文本片段——映射为一个固定长度的浮点数向量（通常有几百到几千维，例如 OpenAI 的 1536 维嵌入）。其魔力在于几何空间：语义相似的文本在这个向量空间中会彼此靠近。"苹果"和"香蕉"聚集在一起；"苹果"和"汽车"则相距甚远。每段文本都在语义空间中获得了自己的坐标——一个代表其含义的数值指纹。
 
-**Vector Database** solves the retrieval problem at scale. Once you've embedded a million documents, how do you find the five most relevant ones to a user's query in under 100 milliseconds? You can't iterate through all of them — that's far too slow. Vector databases use specialized approximate nearest-neighbor (ANN) index structures like HNSW and IVF to make this search blazingly fast, while also providing production necessities: CRUD operations, metadata filtering, and horizontal scaling. Popular implementations include Pinecone, Weaviate, Qdrant, Milvus, and Chroma.
+**Vector Database** 解决的是规模化检索问题。当你给一百万份文档生成了嵌入向量之后，如何在 100 毫秒内找到与用户查询最相关的五份文档？你不可能逐一遍历——那样太慢了。向量数据库使用专门的近似最近邻（ANN）索引结构，如 HNSW 和 IVF，使搜索速度变得极快，同时还提供生产环境所需的必要功能：CRUD 操作、元数据过滤和水平扩展。常见的实现包括 Pinecone、Weaviate、Qdrant、Milvus 和 Chroma。
 
-## Connecting the Dots: How RAG Works
+## 串联各环节：RAG 如何工作
 
-These three pieces snap together into RAG with remarkable clarity. When a user asks "What's the latest reimbursement policy?", here's what happens:
+这三个组件以非常清晰的方式组合成 RAG。当用户问"最新的报销政策是什么？"时，以下是发生的过程：
 
-1. **Tokenize** the query into a token sequence.
-2. **Embed** the query through an embedding model to produce a semantic vector.
-3. **Query** the vector database with that vector to retrieve the top K most relevant document chunks.
-4. **Assemble** a prompt: the user's question plus the retrieved documents as context.
-5. **Send** to the LLM, which now has factual grounding and can answer from evidence rather than memory.
+1. **分词**：将查询 token 化为一个 token 序列。
+2. **嵌入**：通过嵌入模型处理查询，生成一个语义向量。
+3. **查询**：用该向量查询向量数据库，检索出最相关的 Top K 个文档片段。
+4. **组装**：构建一个提示词：用户的问题加上检索到的文档作为上下文。
+5. **发送**：发送给 LLM，此时模型有了事实依据，能够基于证据而非记忆来回答。
 
-That's the core loop. The LLM, which would otherwise be limited to its training data cutoff and prone to hallucination, now has access to fresh, domain-specific, or private information. This is what makes RAG the go-to pattern for enterprise AI.
+这就是核心循环。LLM 本来受限于训练数据的截止日期，并且容易产生幻觉，现在却可以访问新鲜的、领域特定的或私有的信息。这正是 RAG 成为企业 AI 首选模式的原因。
 
-It's worth noting that the embedding model and the LLM are typically different models with different jobs. OpenAI's `text-embedding-ada-002` produces vectors; GPT-4 produces text. They're optimized for fundamentally different tasks — one for semantic representation, the other for generation.
+值得注意的是，嵌入模型和 LLM 通常是不同的模型，承担不同的任务。OpenAI 的 `text-embedding-ada-002` 负责生成向量；GPT-4 负责生成文本。它们针对根本不同的任务进行了优化——一个面向语义表示，另一个面向文本生成。
 
-## The Real-World Challenges
+## 现实世界中的挑战
 
-RAG sounds clean in theory. In practice, a chain of fragile steps means plenty can go wrong.
+RAG 在理论上听起来很简洁。但在实践中，一连串脆弱的环节意味着有很多地方可能出错。
 
-**Chunk strategy** is the most underestimated problem. Split documents too small and you lose context — a sentence fragment without its surrounding paragraph may be semantically meaningless. Split too large and you waste precious context-window tokens and dilute the signal. The right chunk size depends heavily on document type: legal contracts need different treatment than FAQ pages. This single decision can make or break retrieval quality.
+**分块策略** 是最被低估的问题。将文档切分得太小，你会丢失上下文——一个没有周围段落支撑的句子片段可能在语义上毫无意义。切分得太大，则会浪费宝贵的上下文窗口 token，并稀释信噪比。合适的块大小很大程度上取决于文档类型：法律合同需要的处理方式与 FAQ 页面截然不同。仅这一个决策就能决定检索质量的成败。
 
-**Retrieval relevance** is the next hurdle. A user's query might be semantically adjacent to a document in vector space but actually irrelevant to their intent. The model dutifully incorporates the retrieved context and produces a confidently wrong answer. Hybrid search — combining vector similarity with keyword matching (BM25) — is a common mitigation, but it adds complexity.
+**检索相关性** 是下一个障碍。用户的查询在向量空间中可能与某篇文档语义接近，但实际上与用户的意图并不相关。模型会忠实地将检索到的上下文纳入回答，产生一个自信但错误的答案。混合搜索——将向量相似度与关键词匹配（BM25）相结合——是一种常见的缓解手段，但它会增加复杂性。
 
-**Context inflation** sneaks up on you. Retrieving 10 chunks "just to be safe" bloats the prompt, increases latency and cost, and dilutes the model's attention across too much information. More context is not always better.
+**上下文膨胀** 会在不知不觉中出现。为了"保险起见"检索 10 个片段，会膨胀提示词、增加延迟和成本，并且让模型的注意力分散在过多的信息中。更多的上下文并不总是更好。
 
-**Garbage in, garbage out** applies ruthlessly. If your source documents contain errors, outdated information, or contradictory statements, the LLM will faithfully reproduce those flaws. RAG grounds the model in evidence — which means the evidence had better be good.
+**垃圾进，垃圾出** 在这里同样残忍地适用。如果你的源文档包含错误、过时信息或相互矛盾的陈述，LLM 会忠实地复现这些缺陷。RAG 让模型基于证据进行回答——这意味着证据本身必须足够好。
 
 ---
 
-The Token → Embedding → Vector Database pipeline is the circulatory system of AI-native applications. Tokens break text into the language models understand. Embeddings translate meaning into the geometry models can compute with. Vector databases make that geometry searchable at production scale. Together they enable RAG — and RAG, for all its real-world messiness, remains the most practical bridge between the raw power of LLMs and the specific knowledge your application actually needs.
+Token → Embedding → Vector Database 这条管道是 AI Native 应用的循环系统。Token 将文本分解为语言模型能理解的单元。Embedding 将含义转化为模型可以计算的几何空间。Vector Database 让这种几何空间在生产规模下变得可搜索。三者共同实现了 RAG——而 RAG，尽管在实践中充满混乱，仍然是连接 LLM 原始能力与你的应用真正需要的特定知识之间最务实的桥梁。
 
-**Key Takeaways**
+**核心要点**
 
-- **Token**: the atomic unit LLMs process — input and output both flow through token sequences.
-- **Embedding**: maps text to a fixed-length vector in semantic space, where similar meanings cluster together.
-- **Vector Database**: provides millisecond-latency approximate nearest-neighbor search over millions of embeddings using ANN indexes (HNSW, IVF).
-- **RAG flow**: Tokenize query → Embed → Vector DB retrieval → Build grounded prompt → LLM generates from evidence.
-- Embedding models and generation models are typically separate — optimized for representation vs. generation respectively.
-- Top RAG challenges: chunk strategy (size and overlap), retrieval relevance (hybrid search helps), context inflation (more chunks ≠ better), and source data quality (garbage in, garbage out).
-- RAG is the most practical pattern for bridging LLM capabilities with private, domain-specific, or time-sensitive knowledge.
+- **Token**：LLM 处理的原子单元——输入和输出都通过 token 序列流转。
+- **Embedding**：将文本映射为语义空间中的固定长度向量，相似的含义在此空间中彼此聚集。
+- **Vector Database**：使用 ANN 索引（HNSW、IVF）在数百万个嵌入向量上提供毫秒级的近似最近邻搜索。
+- **RAG 流程**：Token 化查询 → 嵌入 → 向量数据库检索 → 构建有依据的提示词 → LLM 基于证据生成回答。
+- 嵌入模型和生成模型通常是分开的——分别针对表征和生成进行优化。
+- RAG 的主要挑战：分块策略（大小和重叠）、检索相关性（混合搜索有所帮助）、上下文膨胀（更多片段 ≠ 更好）以及源数据质量（垃圾进，垃圾出）。
+- RAG 是将 LLM 能力与私有、领域特定或时效性知识连接起来的最实用模式。

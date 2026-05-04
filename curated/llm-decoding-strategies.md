@@ -1,109 +1,109 @@
-# LLM Decoding Strategies: From Sampling to Beam Search
+# LLM 解码策略：从采样到束搜索
 
-Every time a language model generates the next token, it faces the same decision: given a probability distribution over tens of thousands of possible words, which one do you pick? The answer isn't as simple as "the most likely one." Different decoding strategies produce radically different outputs — from rigid, deterministic prose to wildly creative tangents — and choosing the right one is a core skill for any engineer building on LLMs.
+每当语言模型生成下一个 token 时，它都面临同一个决策：给定一个覆盖数万个可能单词的概率分布，你选哪一个？答案远不只是"选最可能的那个"。不同的解码策略会产生截然不同的输出——从刻板、确定性十足的文本到天马行空的发散内容——而选择合适的策略是每个构建 LLM 应用的工程师必须掌握的核心技能。
 
-## Where It All Begins: Logits and Softmax
+## 一切从哪开始：Logits 与 Softmax
 
-At each generation step, the model's final layer outputs raw scores called **logits** — one per token in the vocabulary. These logits aren't probabilities; they're unbounded real numbers, some positive, some negative. To turn them into a proper probability distribution, we apply the softmax function:
+在每个生成步骤中，模型的最后一层会输出原始分数，称为 **logits**——词汇表中每个 token 对应一个。这些 logits 不是概率；它们是取值范围无界的实数，有正有负。为了将它们转化为真正的概率分布，我们需要应用 softmax 函数：
 
 ```
 P(i) = exp(logit_i) / Σ exp(logit_j)
 ```
 
-This gives us a probability for every token in the vocabulary, all summing to 1. Everything that follows — temperature, top-k, top-p, greedy decoding, beam search — is just a different policy for choosing a token from (or modifying) this distribution.
+这样我们就得到了词汇表中每个 token 的概率，所有概率之和为 1。此后的一切——temperature、top-k、top-p、贪心解码、束搜索——都只是从这个分布中选取一个 token（或修改这个分布）的不同策略。
 
-## The Sampling Trio: Temperature, Top-K, Top-P
+## 采样三件套：Temperature、Top-K、Top-P
 
 ### Temperature
 
-Temperature is the simplest and most fundamental knob. Before softmax, we divide every logit by a temperature parameter T:
+Temperature 是最简单也最基础的调节旋钮。在 softmax 之前，我们将每个 logit 除以一个 temperature 参数 T：
 
 ```
 P(i) = exp(logit_i / T) / Σ exp(logit_j / T)
 ```
 
-- **T → 0**: The distribution becomes extremely sharp. All probability mass collapses onto the single highest-scoring token. This is effectively greedy decoding.
-- **T = 1**: The original probability distribution is preserved unchanged.
-- **T > 1**: The distribution flattens. High-probability tokens are suppressed, low-probability tokens are boosted, and the model becomes more "creative" — and more likely to produce nonsense.
+- **T → 0**：分布变得极尖锐。所有概率质量都坍缩到得分最高的那一个 token 上。这实际上等价于贪心解码。
+- **T = 1**：原始概率分布保持不变。
+- **T > 1**：分布趋于平坦。高概率 token 被抑制，低概率 token 被抬升，模型变得更"有创意"——同时也更容易输出无意义的内容。
 
-Temperature doesn't filter the candidate set; it reshapes the entire distribution. Low temperature means safe and predictable; high temperature means varied and risky.
+Temperature 不会过滤候选集合，它重新调整的是整个分布的形态。低 temperature 意味着安全可预测，高 temperature 意味着多样但危险。
 
-### Top-K Sampling
+### Top-K 采样
 
-Top-K takes a more direct approach: after computing the probability distribution, discard everything except the K most probable tokens. Then re-normalize and sample from only those K candidates.
+Top-K 采用了更直接的方式：在计算出概率分布之后，只保留概率最高的 K 个 token，其余全部丢弃。然后重新归一化，仅从这 K 个候选中采样。
 
-The appeal is obvious — you'll never sample a bizarre, 0.001%-probability token that derails the output. The problem is that K is a fixed number. Sometimes the top 50 tokens account for 99% of the probability mass (K=50 is too generous); other times the top 50 only cover 60% (K=50 cuts off meaningful options). A static K can't adapt to the shape of the distribution.
+这个方法的吸引力很明显——你永远不会采样到一个概率 0.001% 的奇葩 token 从而毁掉整个输出。但问题在于 K 是一个固定数字。有些时候前 50 个 token 就覆盖了 99% 的概率质量（这时 K=50 过于宽松）；另一些时候前 50 个 token 只覆盖了 60%（这时 K=50 又切掉了太多有意义的选项）。一个静态的 K 无法适应分布的实际形态。
 
-### Top-P (Nucleus Sampling)
+### Top-P（核采样）
 
-Top-P solves top-K's rigidity by making the cutoff dynamic. Instead of a fixed count, you set a cumulative probability threshold P (commonly 0.9). Sort tokens by descending probability, keep adding them to the candidate set until the cumulative probability exceeds P, and sample from that "nucleus."
+Top-P 通过让截断阈值动态化来解决 top-K 的僵化问题。它不固定候选数量，而是设置一个累积概率阈值 P（通常为 0.9）。将 token 按概率降序排列，不断往候选集合中添加 token，直到累积概率超过 P，然后从这个"核心集合"中采样。
 
-When the distribution is sharply peaked ("The sky is..."), only a few tokens make the cut. When it's flat and uncertain, more tokens are included. This adaptivity makes top-P generally preferable to top-K in modern practice — and indeed, many API providers (including OpenAI) expose `top_p` but not `top_k`.
+当分布尖锐集中时（比如"The sky is..."），只有少数几个 token 能进入候选；当分布平坦、不确定性高时，更多的 token 会被纳入。这种自适应性使得 top-P 在现代实践中通常优于 top-K——事实上，许多 API 提供方（包括 OpenAI）公开了 `top_p` 参数，却没有公开 `top_k`。
 
-### How They Work Together
+### 它们如何协同工作
 
-Temperature, top-K, and top-P aren't mutually exclusive, but they're also not independent. The standard execution order is: **top-K / top-P filter the candidate set first, then temperature adjusts the distribution shape, then the final token is sampled**. In practice, top-K and top-P are usually alternatives rather than complements — using both simultaneously tends to over-constrain the output.
+Temperature、top-K 和 top-P 并非互斥，但也并非互相独立。标准的执行顺序是：**先用 top-K / top-P 过滤候选集合，然后用 temperature 调整分布形态，最后采样最终 token**。在实践中，top-K 和 top-P 通常是替代关系而非互补关系——同时使用二者往往会过度约束输出。
 
-**Real-world parameter recipes:**
+**实战参数配方：**
 
-| Use Case | Temperature | Top-P | Why |
+| 使用场景 | Temperature | Top-P | 原因 |
 |---|---|---|---|
-| Creative writing | 0.8–0.9 | 0.95 | Embrace randomness and variety |
-| Code generation | 0.1–0.3 | 0.9 | Precision matters; creativity is a liability |
-| RAG / factual Q&A | 0.0–0.2 | 0.9 | Stay close to the evidence |
+| 创意写作 | 0.8–0.9 | 0.95 | 拥抱随机性与多样性 |
+| 代码生成 | 0.1–0.3 | 0.9 | 精确度至上，创意反而是负担 |
+| RAG / 事实性问答 | 0.0–0.2 | 0.9 | 严格遵守证据 |
 
-## Beam Search: When You Want the "Best" Answer
+## 束搜索：当你要"最佳"答案时
 
-Beam search represents a fundamentally different philosophy. Instead of sampling from a probability distribution, beam search systematically explores multiple generation paths and picks the one with the highest overall score.
+束搜索代表的是一种根本不同的哲学。它不从概率分布中采样，而是系统地探索多条生成路径，并选择总体得分最高的那条。
 
-### How It Works
+### 工作原理
 
-Beam search maintains B candidate sequences (B = beam size) at every step. At each position, it expands all B candidates by running the model forward once per candidate, producing B × vocab_size possible next tokens. It then ranks all these extensions by cumulative log-probability and keeps only the top B. This repeats until every path has generated an end-of-sequence token (or until max length).
+束搜索在每一步维护 B 条候选序列（B = 束宽）。在每个位置，它对所有 B 条候选进行扩展——每个候选单独跑一次模型前向传播，产生 B × vocab_size 个可能的下一 token。然后按累积对数概率对所有扩展排名，只保留前 B 个。如此重复，直到每条路径都生成了序列结束标记（或达到最大长度）。
 
-When beam size = 1, beam search degenerates into greedy decoding — one path, always the locally optimal choice. With larger beam sizes (typical values: 3–8), the algorithm can recover from early decisions that look good locally but paint the sequence into a corner.
+当束宽 = 1 时，束搜索退化为贪心解码——一条路径，永远选局部最优选项。使用更大的束宽（典型值：3–8）时，算法可以从那些局部看起来很好但会把整个序列引入死胡同的早期决策中恢复。
 
-A crucial implementation detail: beam search doesn't require B separate model forward passes per token. The model's output embedding matrix maps the final hidden state to logits for every vocabulary token in a single matrix multiplication. The B paths can be batched, making beam search roughly B times as expensive as greedy decoding, not B × vocab_size.
+一个关键的实现细节：束搜索不需要为每个 token 跑 B 次独立的模型前向传播。模型的输出嵌入矩阵只需一次矩阵乘法就能将最终的隐藏状态映射为整个词汇表的 logits。B 条路径可以被批量处理，因此束搜索的计算成本大约是贪心解码的 B 倍，而不是 B × vocab_size 倍。
 
-### Length Bias and Normalization
+### 长度偏差与归一化
 
-Beam search has a natural bias toward shorter sequences. Since log-probabilities are always negative, longer sequences accumulate more negative values, making them score worse purely because of length. The standard fix is length normalization:
+束搜索天然倾向于较短的序列。由于对数概率始终是负数，较长的序列会累积更多的负值，纯粹因为长度导致得分更低。标准的修正方法是长度归一化：
 
 ```
-score = Σ log P(t_i) / length^α    (α typically 0.6–0.7)
+score = Σ log P(t_i) / length^α    (α 通常取 0.6–0.7)
 ```
 
-This prevents the model from producing unnaturally terse outputs just to maximize the raw score.
+这能防止模型仅仅为了最大化原始得分而产生不自然的简短输出。
 
-### The Tradeoffs
+### 取舍权衡
 
-Beam search produces grammatically coherent, logically consistent output — which is exactly what you want for machine translation, speech recognition, or summarization, where there's a clear "correct" answer to approximate. But it has serious downsides for open-ended generation:
+束搜索产出语法连贯、逻辑一致的输出——这对于机器翻译、语音识别或文本摘要来说正是你想要的，因为这些任务存在一个明确的"正确"答案可以逼近。但对于开放式生成，束搜索有严重的劣势：
 
-1. **No diversity**: Run beam search on the same prompt 10 times and you'll get nearly identical output every time. The algorithm systematically converges on the highest-probability path.
-2. **The "safe but boring" problem**: The highest-probability sequence is often the most generic one. Beam search loves bland openings like "There are several reasons why..." because those are statistically common across training data.
-3. **Repetition traps**: Beam search can get stuck in loops, repeating the same phrase because the model assigns high probability to continuing an already-repeated pattern.
+1. **没有多样性**：对同一个 prompt 运行束搜索 10 次，你每次得到的输出几乎完全相同。该算法系统性地收敛到最高概率路径。
+2. **"安全但平庸"问题**：最高概率的序列往往是最泛泛的那个。束搜索特别喜欢诸如"There are several reasons why..."这样的平淡开场，因为它们在训练数据中统计上极为常见。
+3. **重复陷阱**：束搜索可能陷入循环，不断重复同一个短语，因为模型对继续一个已经重复的模式赋予了高概率。
 
-## Why Modern Chat Models Prefer Sampling
+## 为什么现代聊天模型偏爱采样
 
-ChatGPT, Claude, and other conversational models overwhelmingly use temperature + top-P sampling rather than beam search. The reasons cut to the heart of what makes conversation different from translation.
+ChatGPT、Claude 以及其他对话模型绝大多数使用 temperature + top-P 采样而非束搜索。原因涉及聊天与翻译之间本质属性的不同。
 
-**Diversity is a feature, not a bug.** When a user asks "tell me a story," they don't want the same story every time. Sampling introduces controlled randomness that makes conversations feel alive and responsive rather than robotic.
+**多样性是特性，不是 bug。** 当用户说"讲个故事"，他们不想要每次都是同一个故事。采样引入了可控的随机性，使对话给人的感觉是鲜活的、有回应的，而不是机械僵硬的。
 
-**There is no single "correct" answer.** Machine translation has a target reference; beam search's drive toward the maximum-likelihood sequence makes sense. But in open-domain chat, "highest probability" doesn't mean "best." The most probable response to "How are you?" is probably "I'm fine, thanks" — a boring and useless reply for a chatbot.
+**不存在唯一的"正确"答案。** 机器翻译有参考译文可以对齐；束搜索追求最大似然序列的逻辑在这里是成立的。但在开放领域的聊天中，"最高概率"并不等于"最好"。对于"你好吗？"这个问题，概率最高的回答可能是"I'm fine, thanks"——但对聊天机器人来说，这是一个无聊且无用的回复。
 
-**Length and repetition penalties.** Sampling-based approaches can be augmented with techniques like repetition penalties and presence penalties — actively suppressing tokens that have already appeared — which are harder to cleanly integrate into beam search's scoring framework.
+**长度和重复惩罚。** 基于采样的方法可以结合重复惩罚（repetition penalty）和出现惩罚（presence penalty）等技术——主动抑制已经出现过的 token——而这些技术很难干净地融入束搜索的评分框架。
 
 ---
 
-Decoding strategy is where the rubber meets the road in LLM applications. The same model, the same prompt, the same context — change only the decoding parameters and you'll get wildly different behavior. Understanding the logit → softmax → distribution pipeline, and knowing when to sample versus when to search, is what separates engineers who treat LLMs as black boxes from those who can reason about and control their outputs.
+解码策略是 LLM 应用中真正落地的关键环节。同一个模型、同一个 prompt、同一个上下文——只改变解码参数，你就会得到截然不同的行为。理解 logit → softmax → 概率分布这条流水线，并知道什么时候该采样、什么时候该搜索，正是区分把 LLM 当黑盒使用的工程师与能推理并控制 LLM 输出的工程师的分水岭。
 
-**Key Takeaways**
+**核心要点**
 
-- All decoding starts from **logits** → **softmax** → **probability distribution**. Every strategy is just a different way to pick from (or modify) this distribution.
-- **Temperature** reshapes the entire distribution before softmax: T→0 is greedy, T=1 is unchanged, T>1 flattens for more randomness.
-- **Top-K** hard-caps candidates to K highest-probability tokens; rigid but simple.
-- **Top-P (nucleus sampling)** dynamically includes tokens until cumulative probability ≥ P; adapts to distribution shape and is generally preferred over top-K.
-- Execution order: top-K/top-P filtering → temperature adjustment → final sampling.
-- **Beam Search** explores B parallel paths, selecting the globally highest-scoring sequence; beam size = 1 degrades to greedy decoding.
-- Beam search excels at translation/summarization (where a "correct" answer exists) but produces rigid, repetitive, low-diversity output — making it unsuitable for open-ended chat.
-- Modern chat models use sampling (temperature + top-P) because conversation requires diversity, has no single correct answer, and benefits from repetition penalties.
-- Length normalization (`score / length^α`) prevents beam search from unfairly favoring short sequences.
+- 所有解码都从 **logits** → **softmax** → **概率分布** 开始。每种策略都是从这个分布中选取（或修改这个分布）的不同方式。
+- **Temperature** 在 softmax 之前调整整个分布的形态：T→0 是贪心，T=1 不变，T>1 会让分布更平坦以增加随机性。
+- **Top-K** 硬性限制候选为概率最高的 K 个 token；简单但僵化。
+- **Top-P（核采样）** 动态纳入 token 直到累积概率 ≥ P；能适应分布形态，通常优于 top-K。
+- 执行顺序：top-K/top-P 过滤 → temperature 调整 → 最终采样。
+- **束搜索** 探索 B 条并行路径，选出全局得分最高的序列；束宽 = 1 退化为贪心解码。
+- 束搜索在翻译/摘要（存在"正确"答案的任务）中表现出色，但产出僵硬、重复、缺乏多样性——不适合开放式对话。
+- 现代聊天模型使用采样（temperature + top-P），因为对话需要多样性、不存在唯一正确答案，且受益于重复惩罚。
+- 长度归一化（`score / length^α`）防止束搜索不公平地偏好短序列。

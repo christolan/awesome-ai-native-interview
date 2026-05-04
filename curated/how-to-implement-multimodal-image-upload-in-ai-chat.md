@@ -1,76 +1,76 @@
-# Building Multimodal AI Chat: How Images and Text Work Together
+# 构建多模态 AI 聊天：图像与文本如何协作
 
-Every AI chat product eventually hits the same inflection point: text isn't enough. Users want to snap a photo of a receipt and ask "what did I spend on groceries?", or paste a screenshot of an error message and get an instant diagnosis. Adding image support transforms a chatbot into something that feels genuinely intelligent—but the engineering underneath is more nuanced than dropping an `<img>` tag into a chat bubble.
+每个 AI 聊天产品最终都会遇到同一个拐点：纯文本不够用了。用户想要拍一张收据的照片然后问"我在杂货上花了多少钱？"，或者粘贴一张错误信息的截图就能得到即时诊断。增加图像支持能将一个聊天机器人转变为真正让人感到智能的东西——但底层的工程设计要比在聊天气泡里放一个 `<img>` 标签复杂得多。
 
-Let's walk through what it actually takes to build multimodal image upload into an AI chat product, from the byte-level plumbing to the UX details that separate a polished experience from a frustrating one.
+让我们深入了解在 AI 聊天产品中构建多模态图像上传功能到底需要什么，从字节级的底层管道到区分精良体验与令人沮丧体验的 UX 细节。
 
-## The Upload Architecture: Why Direct-to-OSS Wins
+## 上传架构：为什么直传 OSS 是更好的选择
 
-When a user selects an image, that file has to get to the model API somehow. The naive approach pipes everything through your backend server: frontend uploads to your server, your server uploads to the model. This works at five users but crumbles at scale—image uploads eat bandwidth, tie up request threads, and turn your API server into a glorified file proxy.
+当用户选择一张图片时，该文件必须以某种方式到达模型 API。最天真的做法是将所有内容通过你的后端服务器传输：前端上传到你的服务器，你的服务器再上传到模型。这在五个用户时没问题，但在规模化时会崩溃——图像上传消耗带宽、占用请求线程，把你的 API 服务器变成一个华丽版的文件代理。
 
-The better pattern is **direct OSS upload**: your backend issues a temporary credential (an STS token or pre-signed URL), and the frontend uploads straight to object storage. The flow looks like this:
+更好的模式是**直传 OSS**：你的后端签发一个临时凭证（STS token 或预签名 URL），前端直接上传到对象存储。流程如下：
 
-1. User selects an image → frontend calls your backend for an upload token
-2. Backend returns a short-lived pre-signed URL (valid for minutes, never hours)
-3. Frontend uploads directly to OSS, receives a permanent image URL
-4. That URL gets bundled into the model API request—no copy ever touches your server
+1. 用户选择图片 → 前端调用后端获取上传 token
+2. 后端返回一个短期有效的预签名 URL（有效期以分钟计，绝不以小时计）
+3. 前端直接上传到 OSS，获得一个永久的图片 URL
+4. 该 URL 被打包进模型 API 请求中——没有任何副本经过你的服务器
 
-This keeps your backend lean and sidesteps the cardinal sin of exposing long-lived access keys in client-side code. The security boundary is clean: temporary credentials, server-side issuance, no secrets on the frontend.
+这保持了你后端的精简，并规避了在客户端代码中暴露长期有效访问密钥的重大安全错误。安全边界是清晰的：临时凭证、服务端签发、前端不存任何 secret。
 
-One timing trick that makes a noticeable UX difference: kick off the upload **the moment the user selects the image**, not when they hit "send." By the time they finish typing their question, the URL is already ready. No spinner, no awkward pause.
+一个能显著改善用户体验的时机技巧：在用户**选择图片的那一刻**就启动上传，而不是在他们点击"发送"时。等到他们打完问题时，URL 已经准备好了。没有加载动画，没有尴尬的停顿。
 
-## How Images Actually Reach the Model: It's Not Markdown
+## 图片如何真正到达模型：不是 Markdown
 
-Here's the mistake almost everyone makes on their first implementation. You're building a chat UI; the message bubble shows an image, so naturally you want to represent it like this:
+这是几乎每个人在第一次实现时都会犯的错误。你在构建一个聊天 UI；消息气泡里显示一张图片，所以你很自然地想这样来表示它：
 
 ```
-User message: "![image](https://cdn.example.com/photo.jpg) What's in this photo?"
+用户消息："![image](https://cdn.example.com/photo.jpg) 这张照片里有什么？"
 ```
 
-That's how the **rendering layer** works, but it's not how the **model API** works. Multimodal LLM APIs expect a structured `content` array, where each element is a typed object:
+这是**渲染层**的工作方式，但不是**模型 API** 的工作方式。多模态 LLM API 期望一个结构化的 `content` 数组，其中每个元素是一个带类型的对象：
 
 ```json
 {
   "role": "user",
   "content": [
-    { "type": "text", "text": "What's in this photo?" },
+    { "type": "text", "text": "这张照片里有什么？" },
     { "type": "image_url", "image_url": { "url": "https://cdn.example.com/photo.jpg" } }
   ]
 }
 ```
 
-This distinction matters because it's the difference between sending the model actual image data versus sending it a string that happens to contain a URL. The model doesn't "see" Markdown—it sees tokens. The structured format tells the model's multimodal encoder precisely where to route the image for processing.
+这个区别很重要，因为这正是向模型发送真正的图像数据，还是发送一个恰好包含 URL 的字符串之间的差异。模型不会"看到" Markdown——它看到的是 token。结构化的格式告诉模型的多模态编码器将图像精确地路由到哪里进行处理。
 
-In your frontend, this means you're maintaining two parallel representations: a display-friendly one for the chat UI (thumbnails, Markdown, whatever your renderer expects), and a structured one for the API payload. They're related but not interchangeable. Keep them separate, and never mash an image URL into a Markdown string and call it done.
+在你的前端中，这意味着你需要维护两种并行的表示：一种用于聊天 UI 的显示友好表示（缩略图、Markdown，或者你的渲染器期望的任何格式），以及一种用于 API 负载的结构化表示。它们是相关的，但不能互换。将它们分开，绝不要把一个图片 URL 塞进 Markdown 字符串就认为完事了。
 
-## Preprocessing: Compression, Validation, and Thumbnails
+## 预处理：压缩、校验和缩略图
 
-Not every image that comes out of a phone camera is ready for a model API. Most providers enforce limits—GPT-4V caps at 20MB per image, others have dimension constraints—and sending raw 12MP photos is wasteful when the model downsamples them anyway.
+并不是手机相机拍出的每张图片都适合直接发送给模型 API。大多数服务商都有强制限制——GPT-4V 每张图片上限 20MB，其他服务商有尺寸限制——而当模型无论如何都会对图片进行降采样时，发送原始的 1200 万像素照片是一种浪费。
 
-A good client-side preprocessing pipeline handles three things:
+一个好的客户端预处理管线要处理三件事：
 
-**Format and size validation** happens first. Check that the file is JPEG, PNG, WebP, or whatever your target model supports. Reject anything outside the size limit with a clear, immediate message—don't let the user discover this when the upload fails thirty seconds later.
+**格式和大小校验** 排在最前面。检查文件是否为 JPEG、PNG、WebP 或目标模型支持的任何格式。拒绝任何超出大小限制的文件，并给出清晰、即时的提示——不要让用户在三十秒后上传失败时才发现问题。
 
-**Client-side compression** is next. Use Canvas to resize images before upload. A 4000×3000 photo can usually become a 1024×768 version with no perceptible quality loss for model comprehension, but a fraction of the bandwidth. This also speeds up the upload itself.
+**客户端压缩** 紧随其后。使用 Canvas 在上传前调整图片尺寸。一张 4000×3000 的照片通常可以变成 1024×768 的版本，对模型理解来说没有可感知的质量损失，但带宽消耗只是原先的一小部分。这也加速了上传本身。
 
-**Thumbnail generation** rounds out the pipeline: the full-resolution image goes to the model, but the chat UI displays a lightweight thumbnail (most OSS providers let you append query parameters like `?x-oss-process=image/resize,w_200` to generate variants on the fly). Clicking the thumbnail opens the original. This keeps long conversation histories from becoming scroll-killing bandwidth hogs.
+**缩略图生成** 完善了整个管线：全分辨率图片发送给模型，但聊天 UI 显示轻量级的缩略图（大多数 OSS 服务商允许你追加查询参数，如 `?x-oss-process=image/resize,w_200` 来动态生成变体）。点击缩略图打开原图。这让长对话历史不会变成让页面滚动卡死的带宽黑洞。
 
-## The UX Details That Actually Matter
+## 真正重要的 UX 细节
 
-The architecture gets the images to the model. The UX determines whether users enjoy the process or abandon it.
+架构负责将图片送到模型面前。UX 则决定用户是享受这个过程还是弃用产品。
 
-**Upload progress** is non-negotiable for large images. A progress bar—even a simple one—tells the user the system is working. Without it, a 10MB upload on a slow connection feels like the app froze. Use `XMLHttpRequest` with `progress` events (or `fetch` with a `ReadableStream` wrapper) to surface real upload percentage.
+**上传进度** 对于大图片来说是不可妥协的。一个进度条——哪怕是一个简单的——告诉用户系统正在工作。没有它，一次在慢速连接下的 10MB 上传会让用户觉得应用卡死了。使用 `XMLHttpRequest` 的 `progress` 事件（或用 `ReadableStream` 包装的 `fetch`）来展示真实的上传百分比。
 
-**Retry logic** needs to be baked in from day one. Network conditions are unpredictable. If the OSS upload fails, retry automatically once or twice before showing an error. If the STS token expires mid-upload (rare but possible), request a fresh token and retry. The user shouldn't need to understand credential lifecycle management.
+**重试逻辑** 需要从第一天起就内置。网络状况不可预测。如果 OSS 上传失败，在显示错误之前自动重试一到两次。如果 STS token 在上传中途过期（很少见，但可能发生），请求一个新的 token 然后重试。用户不需要理解凭证生命周期管理。
 
-**Multi-image support** adds complexity to state management. If the model supports multiple images per message (many do), you need to track a list of selected images with individual upload states—uploading, uploaded, failed—and allow the user to remove individual images before sending. A thumbnail grid with per-image progress indicators and delete buttons is the standard pattern.
+**多图支持** 增加了状态管理的复杂性。如果模型支持每条消息多张图片（很多都支持），你需要追踪一个已选图片的列表，包含每张图片的上传状态——上传中、已上传、失败——并允许用户在发送前删除单张图片。一个带有每张图片独立进度指示器和删除按钮的缩略图网格是标准的做法。
 
-**Clipboard paste** is the power-user feature that makes everything feel seamless. Users don't always want to click "upload"—they want to Ctrl+V a screenshot. The Clipboard API gives you a `Blob` from `navigator.clipboard.read()`. Treat it exactly like a file selection: same validation, same compression, same upload pipeline. The source changes; the pipeline doesn't.
+**剪贴板粘贴** 是一个让一切感觉无缝的强大用户功能。用户并不总是想点击"上传"——他们想用 Ctrl+V 粘贴一张截图。Clipboard API 通过 `navigator.clipboard.read()` 为你提供一个 `Blob`。把它当作文件选择一样对待：同样的校验、同样的压缩、同样的上传管线。来源变了，管线不变。
 
-## Key Takeaways
+## 核心要点
 
-- **Direct OSS upload** keeps your backend lean: issue temporary credentials server-side, upload client-side, and never route image bytes through your application server.
-- **Upload on select, not on send**—pre-warming the upload eliminates perceived latency when the user hits send.
-- **The model API expects structured `content` arrays, not Markdown**—keep your display representation and your API payload strictly separate.
-- **Compress and validate client-side** before upload; reject invalid files early and resize unnecessarily large images with Canvas.
-- **UX polish is the differentiator**: progress bars, automatic retries, multi-image management, and clipboard paste support make the feature feel native rather than bolted-on.
+- **直传 OSS** 保持后端的精简：服务端签发临时凭证，客户端上传，绝不要让图片字节流经你的应用服务器。
+- **选择时即上传，而非发送时**——预热上传消除了用户点击发送时的感知延迟。
+- **模型 API 期望结构化的 `content` 数组，而非 Markdown**——严格区分你的显示表示和 API 负载。
+- **在上传前于客户端进行压缩和校验**；尽早拒绝无效文件，用 Canvas 调整过大图片的尺寸。
+- **UX 打磨是差异化所在**：进度条、自动重试、多图管理和剪贴板粘贴支持让这个功能感觉像是原生体验而非拼凑附加的。

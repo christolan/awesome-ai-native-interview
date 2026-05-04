@@ -1,53 +1,53 @@
-# Streaming in AI Native Apps: From Concept to Production
+# AI 原生应用中的流式输出：从概念到生产
 
-Streaming isn't just a UX polish — it's the default interaction paradigm for AI-native applications. If you've ever watched ChatGPT type out a response token by token, you've experienced streaming. But why does it matter so much, and what does it take to build it right?
+流式输出不仅仅是 UX 上的锦上添花——它是 AI 原生应用的默认交互范式。如果你曾经看着 ChatGPT 一个 token 一个 token 地打出回复，你就已经体验过流式输出了。但它为什么如此重要？要把它做好又需要什么？
 
-## Why Streaming Is the Natural Fit for LLMs
+## 为什么流式输出是 LLM 的天然选择
 
-To understand streaming, you need to understand how large language models actually generate text. An LLM doesn't conjure an entire paragraph in one shot. It works iteratively: given a sequence of input tokens, it predicts the single most probable next token, appends it to the sequence, and repeats. This autoregressive generation loop means the model itself produces content incrementally — so delivering it incrementally to the user is the most natural choice.
+要理解流式输出，你需要先理解大语言模型究竟是如何生成文本的。LLM 并不会一次性变出整个段落。它是迭代工作的：给定一串输入 token，它预测最可能的下一个 token，将其追加到序列中，然后重复这一过程。这种自回归生成循环意味着模型本身就是在增量地产出内容——因此，将内容增量地传递给用户是最自然的选择。
 
-The alternative — waiting for the full response, then displaying it all at once — creates a poor experience. LLM inference is inherently slower than a traditional API call. If users stare at a blank screen for 5, 10, or 30 seconds waiting for a complete answer, they feel the system is broken or stuck. Streaming flips this: the user sees words appear immediately, which reduces perceived latency and waiting anxiety. More importantly, it transforms the interaction from a black-box query into a live collaboration. The user can read along, judge whether the answer is heading in the right direction, and intervene — hitting stop, rephrasing, or asking a follow-up — before the model wastes tokens going down the wrong path.
+另一种做法——等待完整回复，再一次性显示——会带来糟糕的体验。LLM 推理本质上比传统 API 调用要慢。如果用户盯着一片空白的屏幕等待 5 秒、10 秒甚至 30 秒才能看到完整答案，他们会觉得系统坏了或者卡住了。流式输出翻转了这种体验：用户立即看到文字在出现，这降低了感知延迟和等待焦虑。更重要的是，它将交互从黑盒查询转变成了实时协作。用户可以边读边判断回答是否在往正确的方向走，并在模型浪费 token 跑偏之前进行干预——点击停止、重新措辞或追问。
 
-This pattern of early feedback and interruptibility is what separates AI-native products from traditional request-response web apps.
+这种早期反馈和可中断的模式，正是 AI 原生产品区别于传统请求-响应式 Web 应用的关键。
 
-## The Frontend Architecture: More Than Just Appending Text
+## 前端架构：远不止追加文本那么简单
 
-Building a streaming chat UI looks deceptively simple — "just connect to a stream and append chunks to a div." In practice, production-grade streaming demands a carefully designed state machine.
+构建一个流式聊天 UI 看起来简单得具有欺骗性——"接一个流，把 chunk 往 div 里加就行了"。但在实践中，生产级的流式输出需要一个精心设计的状态机。
 
-When the user sends a message, the frontend immediately inserts a `user message` into the conversation and creates an empty `assistant message` as a placeholder. Critically, every entity gets a stable identifier: a `conversationId` for the entire session, a `messageId` for each message, and a `requestId` for each generation attempt. The frontend then opens a streaming connection (carrying these IDs plus conversation context) and begins appending received chunks to the placeholder message while the UI re-renders incrementally.
+当用户发送消息时，前端立即在对话中插入一条 `user message`，并创建一个空的 `assistant message` 作为占位符。关键的是，每个实体都获得一个稳定的标识符：整个会话的 `conversationId`、每条消息的 `messageId`，以及每次生成尝试的 `requestId`。然后前端打开一个流式连接（携带这些 ID 和对话上下文），并开始将接收到的 chunk 追加到占位消息中，同时 UI 进行增量重渲染。
 
-### Protocol Selection
+### 协议选择
 
-For unidirectional text streaming — the server pushing model output to the client — **SSE (Server-Sent Events)** or **fetch + ReadableStream** are almost always the right choices. They're simple, built on standard HTTP semantics, and map cleanly onto the LLM generation model. WebSocket, by contrast, is designed for bidirectional, high-frequency real-time communication (collaborative editing, voice streams, multiplayer state sync). Using it for one-way text generation adds unnecessary complexity without real benefit.
+对于单向文本流式传输——服务器将模型输出推送给客户端——**SSE（Server-Sent Events）** 或 **fetch + ReadableStream** 几乎总是正确的选择。它们简单、基于标准 HTTP 语义，并且能清晰地映射到 LLM 的生成模型。相比之下，WebSocket 是为双向、高频实时通信设计的（协同编辑、语音流、多人状态同步）。用它来做单向文本生成只会增加不必要的复杂度，没有实际收益。
 
-### The Three-Layer State Model
+### 三层状态模型
 
-A common trap is conflating "the text is displayed" with "the data is safely stored." To avoid this, separate your state into three layers:
+一个常见的陷阱是把"文本已显示"和"数据已安全存储"混为一谈。为了避免这一点，将状态分为三层：
 
-- **Message state**: `streaming | completed | stopped | failed` — what the user sees
-- **Request state**: `idle | requesting | aborting | reconnecting` — what the network is doing
-- **Persistence state**: `not_started | persisting | persisted | persist_failed` — what the backend has committed
+- **消息状态（Message state）**：`streaming | completed | stopped | failed` —— 用户看到的是什么
+- **请求状态（Request state）**：`idle | requesting | aborting | reconnecting` —— 网络正在做什么
+- **持久化状态（Persistence state）**：`not_started | persisting | persisted | persist_failed` —— 后端已提交的是什么
 
-These layers move independently. A message can finish streaming (`completed`) while persistence is still in flight (`persisting`). A page refresh can interrupt both. Keeping them distinct prevents the all-too-common bug where "the answer looks done but the database still has nothing."
+这些层各自独立地变化。一条消息可能在流式输出完成后（`completed`）持久化仍在进行中（`persisting`）。页面刷新可能同时中断两者。将它们分开可以防止那个常见的 bug——"答案看起来已经好了，但数据库里什么都没有"。
 
-## Stopping, Persisting, and Recovering
+## 停止、持久化与恢复
 
-**Stop generation** is the feature most likely to break under real-world conditions. The correct approach: when the user clicks stop, the frontend uses `AbortController` to immediately halt local stream consumption (so the UI freezes instantly), then sends an `abort(requestId)` to the server. The server stops model inference and — this is the crucial part — **persists whatever it has already accumulated as the final answer**. The server, not the client, is the source of truth. The frontend may have dropped chunks, the page may have refreshed mid-stream, or the network may have glitched. If the client tries to save "what I saw on screen," you'll get drift between display and database. Let the server be the authority.
+**停止生成** 是最容易在真实场景下出问题的功能。正确的做法：当用户点击停止时，前端使用 `AbortController` 立即中止本地流消费（这样 UI 瞬间冻结），然后向服务器发送 `abort(requestId)`。服务器停止模型推理，并且——这是关键的部分——**将已经累积的所有内容作为最终答案持久化**。服务器，而非客户端，才是事实的源头。前端可能丢失了 chunk，页面可能在流式输出中途刷新了，网络可能出现故障。如果客户端试图保存"我在屏幕上看到的"，你会在显示和数据库之间产生偏移。让服务器成为权威。
 
-**Persistence** must be idempotent. The server writes using `messageId` or `requestId` as the key, so retries, reconnects, and duplicate submissions all update the same record — never creating duplicate messages.
+**持久化** 必须是幂等的。服务器使用 `messageId` 或 `requestId` 作为键来写入，这样重试、重连和重复提交都会更新同一条记录——永远不会创建重复消息。
 
-**Recovery** has two paths. For completed history, the frontend loads past messages by `conversationId` on page load — straightforward. For in-flight generations interrupted by a refresh, the server may still hold a `streaming` or `aborting` intermediate state. The frontend should either re-subscribe to the stream by `requestId` or display the partial message with a "generation was interrupted — regenerate?" affordance. Never leave the user staring at a silent half-answer with no recourse.
+**恢复** 有两条路径。对于已完成的对话历史，前端在页面加载时通过 `conversationId` 加载过去的消息——这很直接。对于因刷新而中断的进行中生成，服务器可能仍持有 `streaming` 或 `aborting` 的中间状态。前端应通过 `requestId` 重新订阅流，或显示部分消息并附带"生成已中断——重新生成？"的操作入口。绝不要让用户面对一个无声的半截答案而无计可施。
 
 ---
 
-Streaming in AI-native apps is an exercise in distributed state consistency. The core insight is that the text stream itself is the easy part. The hard parts are: defining clear identity boundaries (`conversationId`, `messageId`, `requestId`), keeping display state and persistence state separate, treating the server as the authoritative source of truth, and designing every interaction — stop, refresh, reconnect — as a first-class state transition rather than an afterthought.
+AI 原生应用中的流式输出，本质上是一个分布式状态一致性的练习。核心洞见是：文本流本身是简单的部分。困难的部分在于：定义清晰的身份边界（`conversationId`、`messageId`、`requestId`），将显示状态和持久化状态分开，将服务器视为权威的事实来源，并将每种交互——停止、刷新、重连——设计为一等的状态转换，而非事后补救。
 
-**Key Takeaways**
+**核心要点**
 
-- LLMs generate tokens autoregressively, so streaming is the natural delivery mechanism — not just a UX enhancement.
-- Streaming reduces perceived latency, enables early user feedback, and supports interruptibility (stop, retry, refine).
-- Prefer SSE or fetch + ReadableStream for unidirectional text streaming; reserve WebSocket for bidirectional real-time scenarios.
-- Separate state into three layers: message state (what's displayed), request state (what the network is doing), and persistence state (what's committed).
-- On stop: abort locally for instant UI feedback, but let the server persist whatever it accumulated — the server is the source of truth.
-- Persist idempotently by `messageId` to survive retries and reconnects without creating duplicates.
-- Handle page refresh recovery: reload completed history normally; for interrupted generations, either re-subscribe or offer a regenerate option.
+- LLM 以自回归方式生成 token，因此流式输出是自然的交付机制——不仅仅是 UX 增强。
+- 流式输出降低感知延迟，支持早期用户反馈，并支持可中断性（停止、重试、优化）。
+- 对于单向文本流式传输，首选 SSE 或 fetch + ReadableStream；将 WebSocket 留给双向实时场景。
+- 将状态分为三层：消息状态（显示什么）、请求状态（网络在做什么）和持久化状态（已提交什么）。
+- 停止时：在本地中止以获得即时 UI 反馈，但让服务器持久化它累积的内容——服务器是事实的源头。
+- 通过 `messageId` 进行幂等持久化，以在重试和重连中存活而不产生重复。
+- 处理页面刷新恢复：已完成的历史正常加载；对于中断的生成，要么重新订阅，要么提供重新生成的选项。

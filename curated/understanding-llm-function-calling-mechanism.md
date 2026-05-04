@@ -1,71 +1,71 @@
-# Understanding LLM Function Calling: The Protocol Behind AI Tools
+# 深入理解 LLM 函数调用：AI 工具背后的协议
 
-Every time you ask ChatGPT for the weather, tell Cursor to run a terminal command, or watch an AI agent browse the web, you're witnessing the same underlying mechanism: LLM function calling. It's the invisible protocol that turns a text generator into something that can *act*. But despite being the skeleton of every modern AI application, function calling is widely misunderstood—even by engineers who use it daily.
+每当你问 ChatGPT 天气、让 Cursor 运行终端命令，或者看着 AI Agent 浏览网页时，你都在目睹同一个底层机制：LLM 函数调用。正是这个看不见的协议，把一个文本生成器变成了能够*行动*的东西。但尽管函数调用是每个现代 AI 应用的骨架，它却广遭误解——即便是每天都在使用它的工程师也不例外。
 
-Let's go deeper than "here's how to call the API." This is about the protocol itself: how models decide *when* to call a tool, what happens inside the message array, and the engineering realities that make or break production systems.
+让我们越过"这里教你怎么调 API"的层面，深入探讨这个协议本身：模型如何决定*何时*调用工具、`messages` 数组内部发生了什么，以及那些决定生产系统成败的工程现实。
 
-## The Trigger: Models Don't "Decide" to Call Tools
+## 触发条件：模型并不"决定"调用工具
 
-The biggest misconception about function calling is that the model has some kind of internal "I should use a tool now" intuition. It doesn't. The model is an autoregressive token generator—it predicts the next token given the previous ones. Function calling is something the inference layer *enables*, and it requires two explicit conditions:
+关于函数调用最大的误解是认为模型内部有某种"我该用工具了"的直觉。它没有。模型是一个自回归 token 生成器——它只是在给定前文的基础上预测下一个 token。函数调用是推理层*启用*的一项能力，它需要两个明确的条件：
 
-1. The request must include a **`tools` parameter**—an array of function definitions, each with a name, a natural-language description, and a JSON Schema for parameters.
-2. The **`tool_choice`** parameter must allow it. The default is `"auto"`, meaning the model *may* return a tool call if it deems one appropriate. You can also set it to `"none"` (never call), `"required"` (always call), or pin it to a specific function.
+1. 请求必须包含一个 **`tools` 参数**——一个函数定义数组，每个定义包含名称、自然语言描述和参数的 JSON Schema。
+2. **`tool_choice`** 参数必须允许调用。默认值是 `"auto"`，意味着模型在认为合适时*可能*返回工具调用。你也可以设为 `"none"`（绝不调用）、`"required"`（必须调用），或锚定到某个特定函数上。
 
-When `tool_choice` is `"auto"`, the model evaluates each function's description against the user's request. If the request exceeds the model's knowledge boundary—real-time data, private databases, precise computation—and a matching tool exists, the model outputs a tool call instead of text. If nothing matches, it outputs text as usual.
+当 `tool_choice` 为 `"auto"` 时，模型会将每个函数的描述与用户的请求做匹配评估。如果请求超出了模型的知识边界——实时数据、私有数据库、精确计算——且有匹配的工具存在，模型就会输出一个工具调用而不是文本。如果没有任何匹配，它就像往常一样输出文本。
 
-The function description is the *only signal* the model has for deciding when to call. A vague description like "Gets data" will cause both false positives and missed calls. A precise one like "Retrieves current weather conditions for a given city name. Returns temperature, humidity, and conditions string." dramatically improves accuracy. Tool descriptions are a form of prompt engineering—just one layer deeper in the stack.
+函数描述是模型判断何时调用的*唯一信号*。一个模糊的描述如"获取数据"既会导致误触发，也会导致漏调用。而精确的描述如"查询给定城市的当前天气状况。返回温度、湿度和天气状况字符串。"则能大幅提升准确率。工具描述是一种 prompt 工程——只是在技术栈中更深了一层。
 
-## The Mutual Exclusion: Content and Tool Calls Never Coexist
+## 互斥关系：内容与工具调用绝不会并存
 
-One of the most counterintuitive properties of the function calling protocol: in any single assistant response, `content` and `tool_calls` are **mutually exclusive**. The model either returns text or it returns a function invocation—never both at once.
+函数调用协议最反直觉的特性之一是：在任何一个单独的 assistant 响应中，`content` 和 `tool_calls` 是**互斥**的。模型要么返回文本，要么返回函数调用——绝不同时返回两者。
 
-| Scenario | `content` | `tool_calls` |
+| 场景 | `content` | `tool_calls` |
 |:--|:--|:--|
-| Model answers directly | Present | `null` |
-| Model needs a tool | **`null`** | Array of calls |
+| 模型直接回答 | 存在 | `null` |
+| 模型需要工具 | **`null`** | 调用数组 |
 
-ChatGPT seems to "talk while searching," but that's an illusion. Under the hood, it's multiple round trips: the model returns a tool call (no text), your system executes it, feeds the result back, and *then* the model generates the natural language response. The conversational flow you see is stitched together from separate API calls.
+ChatGPT 似乎可以"边搜索边说话"，但那是一种幻觉。底层是多次往返：模型返回一个工具调用（没有文本），你的系统执行它，将结果反馈回去，然后模型再生成自然语言回复。你看到的对话流畅感是由多次独立的 API 调用拼接而成的。
 
-This mutual exclusion has practical implications. If you're streaming responses, you can't partially render text while waiting for a tool call to resolve—you either have content to display or you have a tool to execute, never both in the same response object.
+这种互斥关系有实际影响。如果你正在流式传输响应，就无法在等待工具调用结果的同时部分渲染文本——你要么有内容可以展示，要么有工具需要执行，在同一个响应对象中永远不会两者兼有。
 
-## Messages[]: The Single Source of Truth
+## Messages[]：唯一的真相来源
 
-Function calling isn't stateful in the traditional sense. Every request to the model must contain the *entire conversation history* in the `messages` array. This array is the only thing the model sees, and it grows with each turn. Here's how a complete tool-calling interaction evolves:
+函数调用在传统意义上并不是有状态的。每一次发给模型的请求都必须在 `messages` 数组中包含*完整的对话历史*。这个数组是模型唯一能看到的东西，它会随着每一轮对话而增长。下面是一个完整的工具调用交互如何演进：
 
 ```
-Step 1 — User asks a question
-messages: [user: "What's the weather in Beijing?"]
-        ↓ Send to model
+步骤 1 — 用户提问
+messages: [user: "北京天气怎么样？"]
+        ↓ 发送给模型
 
-Step 2 — Model decides it needs a tool
-messages: [user, assistant(tool_call: get_weather("Beijing"))]
-        ↓ You execute get_weather, get back { temp: 22, condition: "sunny" }
+步骤 2 — 模型判断需要工具
+messages: [user, assistant(tool_call: get_weather("北京"))]
+        ↓ 你执行 get_weather，得到 { temp: 22, condition: "晴" }
 
-Step 3 — Append the tool result
-messages: [user, assistant(tool_call), tool(result: "22°C, sunny")]
-        ↓ Send the full array back to the model
+步骤 3 — 追加工具结果
+messages: [user, assistant(tool_call), tool(result: "22°C，晴")]
+        ↓ 将完整的数组发回模型
 
-Step 4 — Model generates the final answer
-messages: [user, assistant(tool_call), tool(result), assistant(text: "Beijing is sunny, 22°C")]
+步骤 4 — 模型生成最终答案
+messages: [user, assistant(tool_call), tool(result), assistant(text: "北京天气晴好，22°C")]
 ```
 
-Every step is an append to `messages[]`. The model has no memory between API calls—the `messages` array *is* the memory. Skip the `tool` result message before the final call, and the model will hallucinate because it never saw the data. This is also why you can't prune messages mid-interaction: the model needs to see `assistant(tool_call)` to understand that a tool was invoked, and `tool(result)` to know what came back.
+每一步都是对 `messages[]` 的一次追加。模型在两次 API 调用之间没有记忆——`messages` 数组*就是*记忆。如果在最后一次调用之前漏掉了 `tool` 结果消息，模型就会产生幻觉，因为它根本没有看到这些数据。这也是为什么你不能在交互中途删减消息：模型需要看到 `assistant(tool_call)` 才能理解曾有工具被调用，也需要看到 `tool(result)` 才能知道返回了什么。
 
-## Engineering Realities: Parallel Calls, Errors, and Streaming
+## 工程现实：并行调用、错误处理与流式传输
 
-**Parallel tool calls** are a first-class feature. The model can return multiple `tool_calls` in a single response—for instance, simultaneously requesting weather for both Beijing and Shanghai. Your system should execute them concurrently (they're independent) and append all results as separate `tool` messages before the next model call. Serial execution doubles latency for no reason.
+**并行工具调用**是一等公民特性。模型可以在单个响应中返回多个 `tool_calls`——例如，同时查询北京和上海的天气。你的系统应当并发执行它们（它们彼此独立），并在下一次模型调用之前将所有结果以各自的 `tool` 消息追加进去。串行执行等于无谓地将延迟翻倍。
 
-**Error handling** has an elegant pattern: when a tool execution fails, don't throw an exception at the user. Instead, append the error as a `tool` message and send the array back to the model. The model will typically apologize, explain the issue, or try an alternative approach. The error becomes part of the conversation, not a dead end.
+**错误处理**有一个优雅的模式：当工具执行失败时，不要向用户直接抛出异常。而是将错误作为一条 `tool` 消息追加，然后把数组发回模型。模型通常会道歉、解释问题，或尝试替代方案。错误成了对话的一部分，而非走到死胡同。
 
-**Tool call loops** are the hardest edge case. A model might call a tool, get results, then call another tool based on those results—potentially chaining several calls before producing a final answer. Your orchestration layer needs a loop-aware design: keep iterating as long as the model returns `tool_calls`, with a hard maximum to prevent infinite loops. Each iteration appends to `messages[]` and re-requests the model.
+**工具调用循环**是最棘手的边缘情况。模型可能调用一个工具，拿到结果，然后基于这些结果再调用另一个工具——潜在地在给出最终答案之前串联多次调用。你的编排层需要一个循环感知的设计：只要模型还在返回 `tool_calls` 就持续循环迭代，同时设置一个硬上限以防止死循环。每次迭代都追加到 `messages[]` 并重新请求模型。
 
-**Streaming assembly** is the subtlest challenge. When receiving a streaming response (SSE), tool calls arrive as fragmented deltas. A single `get_weather("Beijing")` call might arrive across five SSE events. You need to buffer by `index` (models can emit multiple tool calls interleaved), accumulating `id`, `function.name`, and `function.arguments` fragments until the `tool_calls` stream signals completion. Only then can you parse the full JSON arguments and execute.
+**流式组装**是最微妙的挑战。接收流式响应（SSE）时，工具调用以碎片化的增量（delta）到达。一个简单的 `get_weather("北京")` 调用可能分散在五个 SSE 事件中到达。你需要按 `index` 缓冲（模型可能交错发送多个工具调用），累积 `id`、`function.name` 和 `function.arguments` 的碎片，直到 `tool_calls` 流发出完成信号。只有此时你才能解析出完整的 JSON 参数并执行。
 
-## Key Takeaways
+## 核心要点
 
-- **Function calling is externally triggered**, not internally decided—the `tools` parameter and `tool_choice` setting control whether and when tool calls happen; the model just follows the protocol.
-- **`content` and `tool_calls` are mutually exclusive**—a single response never contains both; multi-turn orchestration creates the illusion of simultaneous text and tool use.
-- **`messages[]` is the single source of truth**—every API call carries the full conversation history, and skipping any intermediate message breaks the model's context.
-- **Execute parallel tool calls concurrently**—they're independent by definition, and serial execution is wasted latency.
-- **Errors are messages too**—feed tool execution failures back into the conversation as `tool` messages and let the model recover gracefully.
-- **Streaming tool calls require careful delta assembly**—buffer by index, accumulate fragments, and parse only when complete.
+- **函数调用是外部触发的**，而非内部决定——`tools` 参数和 `tool_choice` 设置控制着是否以及何时发生工具调用；模型只是遵循协议。
+- **`content` 与 `tool_calls` 互斥**——单个响应绝不会同时包含两者；多轮编排创造了文本与工具同步使用的错觉。
+- **`messages[]` 是唯一的真相来源**——每次 API 调用都携带完整的对话历史，遗漏任何中间消息都会破坏模型的上下文。
+- **并行工具调用应并发执行**——它们从定义上就是相互独立的，串行执行只是浪费延迟。
+- **错误也是消息**——将工具执行失败作为 `tool` 消息反馈回对话，让模型优雅地恢复。
+- **流式工具调用需要小心的增量组装**——按索引缓冲，累积碎片，只在完整时解析。
