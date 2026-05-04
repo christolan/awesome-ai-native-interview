@@ -9,11 +9,6 @@
 ## Reference Answer
 {{answer}}
 
-## Follow-up Questions
-- 
-- 
-- 
-
 ## Notes
 - 
 - 
