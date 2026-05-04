@@ -1,80 +1,39 @@
-# How to Optimize First-Paint and Long-List Performance on Low-End Devices
+# Optimizing AI-Native Apps for Low-End Devices: A Practical Guide
 
-## Interview Question
+Let's set the scene: you're building a news feed app for an audience that skews older, running on budget Android phones, often on spotty WiFi. The homepage is a scrolling list of cards — headline, summary, thumbnail, date. Simple enough on paper. But get it onto a $150 phone with 3GB of RAM and a flaky 3G connection, and "simple" goes out the window. The screen stays white for seconds. Images pop in late, shoving text around. Scrolling stutters. The app feels broken.
 
-假设你负责一个面向中老年用户的新闻资讯 App 首页。页面展示文字新闻卡片（标题、摘要、配图缩略图、发布日期），App 在中低端 Android 手机上跑，WiFi 环境不稳定。请从 **前端工程视角** 说明你的优化策略：
+This isn't a hypothetical. It's a scenario every engineer who ships to real users eventually faces, and it exposes the gap between knowing optimization vocabulary and actually making an app *feel fast* on constrained hardware. The difference is in the details — the ones you only learn by shipping, measuring, and failing on real devices.
 
-- 首屏：数据获取、缓存策略、骨架屏、渐进加载
-- 列表：虚拟化、内存控制、图片懒加载与解码优先级
-- 网络：弱网自适应、预加载、离线容灾
+**Redefining "first paint" as a multi-stage pipeline.** The biggest mental shift is abandoning the idea that the homepage loads in one shot: fetch data, render, done. On low-end devices, that model guarantees a painful white screen. Instead, think of first paint as a sequence of progressive milestones.
 
-## Why this question matters
+The skeleton screen should appear at 0ms — literally the moment the app shell is ready, before a single network byte has arrived. This isn't decorative; it's a psychological trick that transforms "the app is broken" into "the app is loading." Immediately and in parallel with the network request, pull cached data from IndexedDB. LocalStorage is tempting because it's synchronous and easy, but it blocks the main thread and caps out at ~5MB. IndexedDB is asynchronous, capacious, and persistent — exactly what you need for storing the last 100 news items from the user's previous session.
 
-这道题不是测试候选人能否背诵性能优化八股（如虚拟列表、图片懒加载），而是看其是否在真实项目中做过这些优化并踩过坑。它会暴露：
+Once cached data is available (usually within tens of milliseconds), swap the skeleton placeholders with real content. The user now sees yesterday's news, but they see *something*, and that something looks like the real app. Behind the scenes, the network request completes, new data arrives, and you merge it with the cache — using a `Map<id, item>` to deduplicate by news ID — and insert fresh items at the top of the list. Crucially, *don't auto-scroll*. The user might be mid-browse; instead, show a subtle "New stories available" chip they can tap when ready. Finally, write the merged dataset back to IndexedDB with an LRU eviction policy capped at 100 items.
 
-- 是否理解 "首屏渲染" 是从网络到存储到渲染的完整链路，而不只是某个单一优化点
-- 是否在低端设备上真实遇到过长列表卡顿、图片加载抢占带宽、快速滑动时渲染抖动等问题
-- 对 "数据一致性" 和 "体验连续性" 的取舍能力——例如新旧数据拼接时的去重与不打断用户浏览
-- 是否具备弱网/无网的降级工程经验
+This five-stage pipeline — skeleton → cache read → cache render → network merge → cache write — is what turns "the app loaded in 3 seconds" into "the app was usable in 200ms."
 
-## Reference Answer
+**Virtual lists aren't optional.** On a feed with 100+ items, rendering every DOM node is a non-starter on budget hardware. Virtual lists (react-window, vue-virtual-scroller, or a hand-rolled IntersectionObserver implementation) keep only the visible rows plus a small buffer zone in the DOM. But there's a subtlety most guides skip: the buffer size should be *dynamic*, not fixed. On a device with 2GB of RAM, shrink the pre-render window aggressively; on a flagship with 8GB, you can afford a generous buffer. Use `navigator.deviceMemory` or a rough heuristic based on initial render timing to decide.
 
-首屏加载和长列表性能应作为两套独立但耦合的策略来处理。核心目标：**内容最快可见，列表始终流畅**。
+**Image loading is where most apps quietly fail.** The standard advice is "lazy-load images with IntersectionObserver." The problem: on a weak connection, once an image request starts, it occupies a network slot until it completes — even if the user has already scrolled past it. You now have three concurrent image downloads competing for a 200KB/s pipe: the one the user is looking at, and two they've already left behind. The visible image loads last. The app feels slow not because it *is* slow, but because the loading order is wrong.
 
-### 1. 首屏加载：多阶段渐进渲染
+A production-quality image loader does three things differently:
 
-首屏加载不应是"等数据回来再渲染"，而是分阶段推进：
+First, it uses a **dwell-time threshold**. Don't fire the image request the moment a card enters the viewport. Wait until it has been visible for ~300ms. This prevents wasteful loads during fast scrolling, where cards flash in and out of view too quickly to matter.
 
-| 阶段 | 时机 | 内容 |
-|------|------|------|
-| 骨架屏 | 0ms（应用就绪时） | 占位结构，消除白屏 |
-| 缓存数据 | 与网络请求并行 | 从 IndexedDB 异步读取上一次缓存的新闻列表 |
-| 缓存优先渲染 | 缓存数据就绪时 | 将缓存新闻填充到虚拟列表中，替换骨架图 |
-| 网络数据 | 后台异步完成 | 新数据去重后拼接在列表顶部，展示"查看最新"按钮 |
-| 更新缓存 | 网络数据就绪后 | 合并后的最新数据写入 IndexedDB，LRU 上限 100 条 |
+Second, it uses **AbortController to cancel out-of-viewport requests**. If a card leaves the viewport before its image finishes loading, abort the fetch. On constrained networks, freeing that bandwidth for the *current* viewport image has an outsized impact on perceived performance.
 
-**缓存方案选型：** IndexedDB（异步、大容量、持久化），而非 localStorage（同步阻塞）或内存（进程退出即丢失）。
+Third, it manages requests through a **priority queue**: viewport-visible images get immediate dispatch, images in the pre-render buffer get lower priority, and images that have scrolled off-screen get cancelled outright.
 
-**新旧数据拼接：** 使用 `Map<id, item>` 按新闻 ID 去重合并，不自动滚动用户视口，由用户通过悬浮按钮主动触发。
+**Weak network resilience is table stakes.** Three complementary strategies: degrade image quality automatically when `navigator.connection.effectiveType` reports `'slow-2g'` or `'2g'` — request thumbnail versions instead of full-resolution; set aggressive timeouts on image fetches so a stalled download doesn't block the queue forever; and when the network is entirely offline, render from IndexedDB cache with gray placeholder blocks where images would go. The app should never show a blank screen just because the network is absent.
 
-### 2. 长列表性能：虚拟化 + 优先级图片加载
+**Memory discipline under constraint.** Low-end devices crash when you're not looking. Virtual list buffer sizes adapt to available memory. Decoded image bitmaps get evicted from a simple in-memory LRU cache after a configurable TTL. During fast scrolling — detected by comparing timestamps across `requestAnimationFrame` ticks — skip image decoding entirely and show cached thumbnails or placeholders. Resume decoding once scrolling velocity drops below a threshold.
 
-**虚拟列表：** 只渲染视口 + 预渲染区域的 DOM 节点（如 react-window / vue-virtual-scroller / IntersectionObserver 手动实现）。
+These aren't academic optimizations. They're the difference between an app that works on the developer's MacBook Pro and one that works on the phone in a rural village with one bar of signal. In AI-native apps, where model inference already adds latency, leaving these frontend details unoptimized is leaving performance on the table that you can't afford to lose.
 
-**图片懒加载的优先级管理（容易翻车的细节）：**
+**Key Takeaways**
 
-图片加载不能简单地"进入视口就加载、离开就不管"。真实场景中的合理策略：
-
-1. 使用 IntersectionObserver 记录每个卡片的 `enterTime` 和 `exitTime`
-2. 每 300ms 检查仍在视口内的卡片，停留时间 > 300ms 的卡片触发图片加载
-3. **关键优化：** 如果卡片在图片加载完成前离开视口，通过 `AbortController` 取消正在进行的 fetch/图片请求
-4. 用一个优先级队列管理所有图片请求：当前视口内的 > 即将进入的 > 已离开的
-
-**为什么要取消离屏请求？** 低端设备上网络带宽有限，如果不取消已被划走的卡片图片请求，这些请求会持续占用网络通道和内存解码资源，反而让用户正在看的卡片的图片加载更慢。
-
-### 3. 弱网与离线策略
-
-- **弱网自适应：** 降低图片质量（请求缩略图而非原图）、延长图片加载超时
-- **离线容灾：** IndexedDB 缓存数据直接展示，图片展示占位图/灰色方块
-- **网络恢复：** 静默刷新数据，更新"查看最新"按钮状态
-
-### 4. 内存控制
-
-- 虚拟列表的 buffer size 根据设备内存动态调整（低端机收窄 pre-render 区域）
-- 图片加载完成后，超过 max-age 的图片从内存中释放缩略图缓存
-- 快速滑动时跳过解码：使用 `requestAnimationFrame` + 时间戳判断是否在高速滚动，如果是，暂缓图片解码
-
-## Follow-up Questions
-
-- 缓存数据 + 网络数据的拼接是按 id 去重还是按分页 offset 合并？如果用户已经看到第 20 条，新数据回来插在顶部，用户的滚动位置怎么处理？
-- 用户快速滑动后停止，图片开始加载，但用户马上又开始滑动——取消已触发的请求会导致反复取消和重新请求，如何避免？
-- IndexedDB 查询在低端机上可能消耗几十毫秒，如果用户访问首页时有强网，缓存数据的价值可能低于等网络数据直接渲染。你会如何根据网络状态决定是否先用缓存？
-
-## Notes
-
-- 本题目考查的是"做过实际优化 vs 背概念"的区别，最易翻车的细节是：
-  - 取消离开视口的图片请求（大多数人不会做）
-  - 新旧数据拼接时的去重与不打断用户（大多数人不会想）
-  - 缓存的时序（骨架屏 → 缓存 → 网络 的三阶段渲染，大多数人只想到骨架屏）
-- 不同框架的虚拟列表实现差异不影响核心思路
-- 图片懒加载的"可见性时长阈值"是比单纯"进入视口即加载"更成熟的策略
+- First paint is a pipeline, not a single event: skeleton (0ms) → cached data (IndexedDB, async) → network merge (deduplicated, non-disruptive) → cache update. Each stage makes the app feel progressively more alive.
+- IndexedDB beats localStorage for caching because it's asynchronous (non-blocking), has meaningful storage capacity, and persists across sessions — all critical for offline-first experiences.
+- Virtual list buffer sizes should be dynamic based on device memory; a fixed buffer that works on a flagship will cause OOM crashes on a budget device.
+- Image lazy loading needs a dwell-time threshold (~300ms visible before loading) and AbortController-based cancellation of off-screen requests to avoid bandwidth contention on weak networks.
+- Weak-network and offline strategies (quality degradation, IndexedDB fallback, gray placeholders) are not nice-to-haves — they're what makes the app usable for users who need it most.
