@@ -54,7 +54,7 @@
 
 创建 `curated/<slug>.md`，格式参考 `templates/curated-entry.md`，**章节标题不得改名或新增顶层章节**。
 
-同时在 `README.md` 的"已沉淀面试题索引"列表中追加对应链接。
+同时在 `README.md` 的 curated 链接列表中追加对应链接。
 
 ---
 
