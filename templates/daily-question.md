@@ -1,10 +1,7 @@
 # {{date}}
 
 ## Question
-{{question}}
-
-## Why this matters
-{{why_this_matters}}
+<!-- write question here -->
 
 ## Expected points
 - 
@@ -19,7 +16,3 @@
 
 ## Improved Answer
 <!-- refined answer -->
-
-## Decision
-- [ ] Archive only
-- [ ] Promote to curated
