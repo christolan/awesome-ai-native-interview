@@ -31,3 +31,4 @@ AGENTS.md    AI 协作维护指南
 - [大模型采样三参数详解：temperature、top_k、top_p](./curated/llm-sampling-temperature-topk-topp.md)
 - [Beam Search 详解：原理、优缺点与工程取舍](./curated/beam-search-vs-sampling-decoding-strategies.md)
 - [LLM Function Calling 机制详解：触发条件、消息数组与循环链路](./curated/understanding-llm-function-calling-mechanism.md)
+- [Reasoning 模型底层机制详解：Thinking Tokens、边界信号与推理开关](./curated/how-reasoning-models-work.md)
