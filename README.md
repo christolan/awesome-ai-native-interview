@@ -2,24 +2,6 @@
 
 一个面向 **AI Native 工程师** 的面试训练与内容沉淀仓库。
 
-每天一道题，先作答，再复盘，把真正有价值的内容沉淀下来。  
-前期以前端方向为主，后续逐步扩展到客户端、服务端和 AI 工程。
-
----
-
-## 目录结构
-
-```text
-daily/       每日训练记录（题目 + 作答 + 点评 + 优化答案）
-curated/     精选沉淀内容（可长期复习的参考答案）
-templates/   写作模板
-AGENTS.md    AI 协作维护指南
-```
-
----
-
-## 已沉淀面试题索引
-
 - [04-22] [什么是 Streaming 响应，为什么它在 AI Native 应用中很重要？](./curated/what-is-streaming-and-why-it-matters-in-ai-native-apps.md)
 - [04-23] [为什么不能无限把完整聊天记录追加给 LLM？](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
 - [04-24] [如何在前端设计 Streaming AI 聊天交互？](./curated/how-to-design-streaming-ai-chat-on-the-frontend.md)
