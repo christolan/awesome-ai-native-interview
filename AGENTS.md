@@ -29,7 +29,7 @@
 
 - 每天只出一道题
 - 难度根据用户实际答题表现动态调整
-- 重点关注：大语言模型的原理与应用、AI Agents 开发、AI Coding 的实践
+- 重点关注：大语言模型的原理与应用、AI Agents 开发、AI Coding 实践
 
 ### 2. 点评
 
@@ -42,12 +42,14 @@
 创建 `daily/YYYY-MM-DD.md`，格式参考 `templates/daily-question.md`。
 
 补充说明：
+
 - 忠实保留用户的原始回答
 - Review 采用教练风格：先优点，再不足
 
 ### 4. 沉淀（curated）
 
 满足以下条件才 promote：
+
 - 题目有代表性
 - 答案有长期复用价值
 - 内容整理后适合独立阅读
@@ -55,6 +57,7 @@
 创建 `curated/<slug>.md`。Curated 不设固定模板——它应该是一篇完整的技术文章，像一篇博客或技术分享，核心目标是把一个问题讲清楚。
 
 同时在 `README.md` 的 curated 链接列表中追加对应链接。
+
 - 文中出现新的核心概念时，同步追加到 `README.md` 的核心概念术语表中，保持字母序，一条一句话精准定义。
 
 ---
@@ -65,5 +68,5 @@
 - commit message 格式：`docs: archive day N <简短主题描述>`
 - 每次归档只提交当次涉及的文件
 - 不提前过度设计目录结构，内容积累后再自然演化
-- 核心技术概念不做中文翻译，直接使用英文术语（如 beam search、greedy decoding、log probability、length normalization、nucleus sampling）
+- AI 核心技术概念不做中文翻译，直接使用英文术语
 - 默认中文
