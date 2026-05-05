@@ -10,15 +10,52 @@
 
 ## 文章列表
 
-- [04-22/04-24] [AI 原生应用中的流式输出：从概念到生产](./curated/streaming-in-ai-native-apps.md)
-- [04-23] [为什么无限追加聊天历史会毁掉你的 LLM 应用](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
-- [04-25] [为低端设备优化 AI 原生应用：实用指南](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
-- [04-26/04-27] [从 Token 到 RAG：理解 AI Native 数据管道](./curated/from-tokens-to-rag.md)
-- [04-28] [Transformer 如何真正生成文本：可视化详解](./curated/how-transformer-inference-works-attention-ffn-kvcache-sampling.md)
-- [04-29] [构建多模态 AI 聊天：图像与文本如何协作](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
-- [04-30/05-01] [LLM 解码策略：temperature、采样与 beam search，到底在选什么](./curated/llm-decoding-strategies.md)
-- [05-03] [深入理解 LLM 函数调用：模型不会"决定"用工具](./curated/understanding-llm-function-calling-mechanism.md)
-- [05-04] [推理模型如何"思考"：一切都只是 Token](./curated/how-reasoning-models-work.md)
+- [AI 原生应用中的流式输出：从概念到生产](./curated/streaming-in-ai-native-apps.md)
+- [为什么无限追加聊天历史会毁掉你的 LLM 应用](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
+- [为低端设备优化 AI 原生应用：实用指南](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
+- [从 Token 到 RAG：理解 AI Native 数据管道](./curated/from-tokens-to-rag.md)
+- [Transformer 如何真正生成文本：可视化详解](./curated/how-transformer-inference-works-attention-ffn-kvcache-sampling.md)
+- [构建多模态 AI 聊天：图像与文本如何协作](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
+- [LLM 解码策略：temperature、采样与 beam search，到底在选什么](./curated/llm-decoding-strategies.md)
+- [深入理解 LLM 函数调用：模型不会"决定"用工具](./curated/understanding-llm-function-calling-mechanism.md)
+- [推理模型如何"思考"：一切都只是 Token](./curated/how-reasoning-models-work.md)
+
+---
+
+## Reference
+
+每篇 curated 文章源于日常面试题，以下是完整关联：
+
+**流式输出** → [AI 原生应用中的流式输出：从概念到生产](./curated/streaming-in-ai-native-apps.md)
+- [04-22 什么是流式输出？为什么它在 AI Native 应用里比一次性展示更重要？](./daily/2026-04-22.md)
+- [04-24 前端如何实现流式 AI 对话：实时展示、中途停止、可靠落盘、页面恢复](./daily/2026-04-24.md)
+- [05-02 前端如何实现支持中断和恢复的流式对话？](./daily/2026-05-02.md)
+
+**上下文管理** → [为什么无限追加聊天历史会毁掉你的 LLM 应用](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
+- [04-23 为什么不能把用户所有历史消息无限追加发给模型？如何设计上下文管理方案？](./daily/2026-04-23.md)
+
+**低端设备优化** → [为低端设备优化 AI 原生应用：实用指南](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
+- [04-25 面向中低端 Android 手机和弱网环境，如何优化新闻资讯 App 首页？](./daily/2026-04-25.md)
+
+**RAG 数据管道** → [从 Token 到 RAG：理解 AI Native 数据管道](./curated/from-tokens-to-rag.md)
+- [04-26 Token → Embedding → Vector Database 三者有什么区别？如何协同工作？](./daily/2026-04-26.md)
+- [04-27 什么是 RAG？它解决了 LLM 的什么问题？实际应用中有哪些常见挑战？](./daily/2026-04-27.md)
+
+**Transformer 推理** → [Transformer 如何真正生成文本：可视化详解](./curated/how-transformer-inference-works-attention-ffn-kvcache-sampling.md)
+- 04-28 Transformer 推理的四个阶段：Attention、FFN、层叠、解码（直接沉淀为 curated）
+
+**多模态 AI 聊天** → [构建多模态 AI 聊天：图像与文本如何协作](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
+- [04-29 如何在前端实现图片上传 + 图文混合问答功能？](./daily/2026-04-29.md)
+
+**LLM 解码策略** → [LLM 解码策略：temperature、采样与 beam search，到底在选什么](./curated/llm-decoding-strategies.md)
+- [04-30 temperature、top_k、top_p 分别控制什么？背后数学逻辑是什么？怎么组合使用？](./daily/2026-04-30.md)
+- [05-01 Beam Search 的原理是什么？和 greedy decoding 有什么区别？为什么现代对话模型不用它？](./daily/2026-05-01.md)
+
+**LLM 函数调用** → [深入理解 LLM 函数调用：模型不会"决定"用工具](./curated/understanding-llm-function-calling-mechanism.md)
+- [05-03 当模型返回 Function Call 时，前端如何处理：接收 → 执行 → 回传 → 渲染？](./daily/2026-05-03.md)
+
+**推理模型** → [推理模型如何"思考"：一切都只是 Token](./curated/how-reasoning-models-work.md)
+- [05-04 thinking tokens 是什么？为什么"先想后答"能提升推理准确性？流式响应有何不同？](./daily/2026-05-04.md)
 
 ---
 
@@ -64,8 +101,6 @@
 
 **FFN (Feed-Forward Network)** — Transformer Block 中的两层非线性变换（扩展→激活→压缩），存储了模型大部分事实性知识，约占 Transformer 参数量的三分之二。
 
-**First Paint** — 页面首次在用户眼前渲染的时刻；在低端设备上应拆成骨架屏→缓存→网络合并的渐进流水线。
-
 **Function Calling** — 模型输出结构化工具调用 token 而非自然语言的能力，本质是推理层在 prompt 中注入工具描述后的协议遵从。
 
 ### G
@@ -87,8 +122,6 @@
 ### L
 
 **Layer Normalization** — 对层内激活值做归一化以稳定训练，是 Transformer 残差连接的关键配套组件。
-
-**Lazy Loading** — 推迟加载屏幕外内容直到用户滚动到附近，减少初始带宽和渲染压力。
 
 **Length Normalization** — 将 beam search 的累积 log probability 除以 length^α，防止算法因 log probability 全为负数而不公平地偏爱短序列。
 
@@ -124,8 +157,6 @@
 
 ### S
 
-**Skeleton Screen** — 用灰色占位块模仿页面布局，在内容加载期间展示，让用户感知到「正在加载」而非「卡死了」。
-
 **Softmax** — 将 logits 向量转换为合法概率分布的函数：exp(x_i) / Σ exp(x_j)，是 logits 到概率的最后一步。
 
 **Speculative Decoding** — 用小草稿模型快速提议多个候选 token，再用完整模型一次前向传播验证，加速生成而不改变输出分布。
@@ -157,8 +188,6 @@
 ### V
 
 **Vector Database** — 专为 embedding 向量设计的数据存储系统，用 ANN 索引实现毫秒级相似搜索，同时支持 CRUD 和元数据过滤。
-
-**Virtual Scrolling** — 只渲染视口可见区域的列表项，非可见项用占位元素替代，避免渲染数千个 DOM 节点导致卡顿。
 
 **Vision Model** — 将图像编码为 LLM 可理解表示的模型组件，是多模态能力的关键组成部分。
 
