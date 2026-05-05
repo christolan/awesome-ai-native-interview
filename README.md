@@ -19,6 +19,7 @@
 - [LLM 解码策略：temperature、采样与 beam search，到底在选什么](./curated/llm-decoding-strategies.md)
 - [深入理解 LLM 函数调用：模型不会"决定"用工具](./curated/understanding-llm-function-calling-mechanism.md)
 - [推理模型如何"思考"：一切都只是 Token](./curated/how-reasoning-models-work.md)
+- [ReAct、CoT 与 Tool-Use：从想清楚到做清楚](./curated/react-cot-and-tool-use.md)
 
 ---
 
@@ -31,6 +32,8 @@
 **AbortController** — 浏览器 API，用于中断进行中的 fetch 请求，是实现流式输出「停止」功能的基础。
 
 **ANN (Approximate Nearest Neighbor)** — 近似最近邻搜索算法族（HNSW、IVF 等），在百万级向量中做毫秒级相似检索而不必穷举比对。
+
+**Agent** — 具备自主规划、工具调用和反馈驱动迭代循环的 LLM 系统；区别于仅有工具但缺乏规划和循环的助手。
 
 **Attention** — Transformer 的核心信息路由机制：每个 token 通过 Q/K/V 三组投影，用 Q 去查 K 产生注意力权重，再用权重聚合 V 得到融合上下文的新表示。
 
@@ -111,6 +114,8 @@
 ### R
 
 **RAG (Retrieval-Augmented Generation)** — 检索增强生成：将用户查询转为 embedding → 向量库检索相关文档 → 拼入 prompt → LLM 基于证据生成，让模型能访问训练截止日期之后或私有的知识。
+
+**ReAct** — Reasoning + Acting 范式，让 LLM 在 Thought→Action→Observation 的循环中交替推理和工具调用，形成推理指导行动、行动反馈推理的闭环。
 
 **Reasoning Model** — 先生成内部思考 token（用户不可见），再生成最终答案的模型；思考 token 与输出 token 由相同的 autoregressive 机制产生，没有独立推理引擎。
 
