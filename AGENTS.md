@@ -64,4 +64,5 @@
 - commit message 格式：`docs: archive day N <简短主题描述>`
 - 每次归档只提交当次涉及的文件
 - 不提前过度设计目录结构，内容积累后再自然演化
+- 核心技术概念不做中文翻译，直接使用英文术语（如 beam search、greedy decoding、log probability、length normalization、nucleus sampling）
 - 默认中文
