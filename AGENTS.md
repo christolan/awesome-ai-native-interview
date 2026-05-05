@@ -14,10 +14,10 @@
 
 ## 目录约定
 
-| 目录 | 用途 |
-|------|------|
-| `daily/` | 每日训练记录，文件名为 `YYYY-MM-DD.md` |
-| `templates/` | 写作模板，不直接修改 |
+| 目录         | 用途                                   |
+| ------------ | -------------------------------------- |
+| `daily/`     | 每日训练记录，文件名为 `YYYY-MM-DD.md` |
+| `templates/` | 写作模板，不直接修改                   |
 
 ---
 
@@ -52,9 +52,7 @@
 - 答案有长期复用价值
 - 内容整理后适合独立阅读
 
-沉淀时，将文章同步写入博客仓库 `~/christolan.github.io/source/_posts/<slug>.md`，添加 Hexo front matter，并在博客仓库 commit + push。
-
-Curated 不设固定模板——它应该是一篇完整的技术文章，像一篇博客或技术分享，核心目标是把一个问题讲清楚。
+沉淀时，将文章同步写入博客仓库 `christolan.github.io`，添加 Hexo front matter，并在博客仓库 commit + push。
 
 ---
 

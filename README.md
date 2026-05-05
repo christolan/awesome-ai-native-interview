@@ -2,30 +2,11 @@
 
 ## 项目简介
 
-一个面向 **AI Native 工程师** 的面试训练与内容沉淀仓库。
-
-每天一道题，聚焦 LLM 原理、AI Agents 开发和 AI Coding 实践。回答、点评、迭代——高质量内容经整理后沉淀为 curated 技术文章。每篇文章像一篇独立博客，把一个概念讲透。
-
----
-
-## 文章列表
-
-- [AI 原生应用中的流式输出：从概念到生产](./curated/streaming-in-ai-native-apps.md)
-- [为什么无限追加聊天历史会毁掉你的 LLM 应用](./curated/why-you-cant-infinitely-append-full-chat-history-to-an-llm.md)
-- [为低端设备优化 AI 原生应用：实用指南](./curated/how-to-optimize-first-paint-and-long-list-performance.md)
-- [从 Token 到 RAG：理解 AI Native 数据管道](./curated/from-tokens-to-rag.md)
-- [Transformer 如何真正生成文本：可视化详解](./curated/how-transformer-inference-works-attention-ffn-kvcache-sampling.md)
-- [构建多模态 AI 聊天：图像与文本如何协作](./curated/how-to-implement-multimodal-image-upload-in-ai-chat.md)
-- [LLM 解码策略：temperature、采样与 beam search，到底在选什么](./curated/llm-decoding-strategies.md)
-- [深入理解 LLM 函数调用：模型不会"决定"用工具](./curated/understanding-llm-function-calling-mechanism.md)
-- [推理模型如何"思考"：一切都只是 Token](./curated/how-reasoning-models-work.md)
-- [ReAct、CoT 与 Tool-Use：从想清楚到做清楚](./curated/react-cot-and-tool-use.md)
+AI Native 工程师面试题库
 
 ---
 
 ## 核心概念
-
-以下术语均来自上述文章，按字母序排列，每条用一句话精准定义。
 
 ### A
 
