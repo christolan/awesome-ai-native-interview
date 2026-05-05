@@ -3,11 +3,6 @@
 ## Question
 <!-- write question here -->
 
-## Expected points
-- 
-- 
-- 
-
 ## Your Answer
 <!-- write your answer here -->
 
