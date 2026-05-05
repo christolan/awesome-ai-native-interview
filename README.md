@@ -6,6 +6,27 @@ AI Native 工程师面试题库
 
 ---
 
+## 面试题索引
+
+| 日期 | 题目 |
+|------|------|
+| 2026-04-22 | 流式输出（streaming response）与即时展示的重要性 |
+| 2026-04-23 | 上下文管理（context management）方案设计 |
+| 2026-04-24 | Web 应用接入流式 AI 对话（实时 token 展示） |
+| 2026-04-25 | 中老年新闻 App + AI 图片理解 |
+| 2026-04-26 | Embedding / Vector Search / RAG 协同工作 |
+| 2026-04-27 | RAG 原理与常见挑战 |
+| 2026-04-29 | 多模态输入（文字 + 图片）图文混合问答 |
+| 2026-04-30 | Temperature / Top-K / Top-P 采样参数 |
+| 2026-05-01 | Beam Search 原理与解码策略对比 |
+| 2026-05-02 | 流式对话的中断与恢复 |
+| 2026-05-03 | Function Call / Tool Call 前端处理流程 |
+| 2026-05-04 | Reasoning Model 运作机制（thinking tokens） |
+| 2026-05-05 | ReAct 模式（Reasoning + Acting） |
+| 2026-05-06 | RAG 生产环境常见失败模式与排查 |
+
+---
+
 ## 核心概念
 
 ### A
