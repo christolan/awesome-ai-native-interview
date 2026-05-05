@@ -112,7 +112,7 @@
 
 **RAG (Retrieval-Augmented Generation)** — 检索增强生成：将用户查询转为 embedding → 向量库检索相关文档 → 拼入 prompt → LLM 基于证据生成，让模型能访问训练截止日期之后或私有的知识。
 
-**Reasoning Model** — 先生成内部思考 token（用户不可见），再生成最终答案的模型；思考 token 与输出 token 由相同的自回归机制产生，没有独立推理引擎。
+**Reasoning Model** — 先生成内部思考 token（用户不可见），再生成最终答案的模型；思考 token 与输出 token 由相同的 autoregressive 机制产生，没有独立推理引擎。
 
 **Residual Connection** — 将层的输入加到其输出上再送入下一层，解决深层网络梯度消失问题，使上百层的 Transformer 堆叠成为可能。
 
@@ -140,7 +140,7 @@
 
 **Token** — LLM 输入输出的原子单元，可以是一个完整单词、子词碎片或单个字符，由 tokenizer 决定切割粒度。
 
-**Token Limit** — 上下文窗口所定义的输入 token 硬上限，超限后只能截断或拒绝。
+**Token Limit** — context window 所定义的输入 token 硬上限，超限后只能截断或拒绝。
 
 **Tool Choice** — 函数调用 API 中的控制参数（`auto`/`required`/`none`），决定模型是否允许、必须或禁止返回工具调用。
 

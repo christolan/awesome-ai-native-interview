@@ -18,7 +18,7 @@
 
 ---
 
-### 第一层：上下文窗口是硬天花板
+### 第一层：context window 是硬天花板
 
 GPT-4o 上限 128K token，Claude 200K，Gemini 2.5 Pro 1M。
 
@@ -38,7 +38,7 @@ GPT-4o 上限 128K token，Claude 200K，Gemini 2.5 Pro 1M。
 
 ### 第三层：延迟在负载下叠加
 
-更长的 prompt = 更长的推理时间。注意力机制的计算量随序列长度二次增长。
+更长的 prompt = 更长的推理时间。Attention 的计算量随序列长度二次增长。
 
 把聊天历史翻倍，延迟不是翻倍，是可能翻四倍。
 
