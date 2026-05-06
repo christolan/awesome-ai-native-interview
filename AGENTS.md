@@ -22,12 +22,13 @@
 - **每次归档只提交当次涉及的文件**
 - **核心技术概念不翻译**：beam search / greedy decoding / log probability / length normalization / nucleus sampling
 - **默认中文**
-- **daily/ 是永久归档**，不删除；curated 内容才迁移博客
+- **daily/ 是永久归档**，不删除；curated 内容迁移博客
 
-## 面试流程
+## 流程规范
 
-详见 `hermes skills daily-interview`（引用自 `christolan/hermes-skills` 仓库，自动同步）。
+| 流程 | 规范来源 |
+|------|---------|
+| 每日面试 | `hermes skills daily-interview` |
+| 博客维护 | `hermes skills blog-curation` |
 
-## 博客仓库
-
-`~/christolan.github.io` — Hexo 博客，push 后 GitHub Actions 自动部署。
+两个 skill 均托管于 `christolan/hermes-skills`，自动同步。
