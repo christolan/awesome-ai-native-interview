@@ -1,66 +1,33 @@
-# AGENTS.md — AI 协作维护指南
+# AGENTS.md
 
-本文档面向协助维护该仓库的 AI（如 Hermes Agent）。  
-描述了仓库的维护约定、工作流程和写作规范。
+面向 AI 的仓库维护指南。
 
 ---
 
 ## 仓库概述
 
-这是一个面向 AI Native 工程师的面试训练仓库，由 AI 持续维护。  
-每天进行一次面试，AI 出题、点评和归档；高质量内容可沉淀到博客。
+面向 AI Native 工程师的面试训练仓库。日常维护由 AI 驱动：出题、点评、归档、沉淀。
 
----
+## 目录结构
 
-## 目录约定
+| 目录 | 用途 |
+|------|------|
+| `daily/` | 每日训练记录，`YYYY-MM-DD.md` |
+| `templates/` | 写作模板（不直接修改） |
 
-| 目录         | 用途                                   |
-| ------------ | -------------------------------------- |
-| `daily/`     | 每日训练记录，文件名为 `YYYY-MM-DD.md` |
-| `templates/` | 写作模板，不直接修改                   |
+## 核心规范
 
----
+- **小改动直推 `main`**，不需要 PR
+- **commit 格式**：`docs: archive day YYYY-MM-DD <topic>`
+- **每次归档只提交当次涉及的文件**
+- **核心技术概念不翻译**：beam search / greedy decoding / log probability / length normalization / nucleus sampling
+- **默认中文**
+- **daily/ 是永久归档**，不删除；curated 内容才迁移博客
 
-## 每日面试工作流
+## 面试流程
 
-### 1. 出题
+详见 `hermes skills daily-interview`（引用自 `christolan/hermes-skills` 仓库，自动同步）。
 
-- 每天只出一道题
-- 难度根据用户实际答题表现动态调整
-- 重点关注：大语言模型的原理与应用、AI Agents 开发、AI Coding 实践
+## 博客仓库
 
-### 2. 点评
-
-- 先肯定答得好的地方，再指出不足
-- 最后给出更完整的参考答法
-- 评分参考满分 10 分
-
-### 3. 归档（用户要求时执行）
-
-创建 `daily/YYYY-MM-DD.md`，格式参考 `templates/daily-question.md`。
-
-补充说明：
-
-- 忠实保留用户的原始回答
-- Review 采用教练风格：先优点，再不足
-
-### 4. 沉淀
-
-满足以下条件才沉淀到博客：
-
-- 题目有代表性
-- 答案有长期复用价值
-- 内容整理后适合独立阅读
-
-沉淀时，将文章同步写入博客仓库 `christolan.github.io`，添加 Hexo front matter，并在博客仓库 commit + push。
-
----
-
-## 补充规范
-
-- 所有小改动直接推送到 `main`，不需要 PR
-- commit message 格式：`docs: archive day N <简短主题描述>`
-- 每次归档只提交当次涉及的文件
-- 不提前过度设计目录结构，内容积累后再自然演化
-- AI 核心技术概念不做中文翻译，直接使用英文术语
-- 默认中文
+`~/christolan.github.io` — Hexo 博客，push 后 GitHub Actions 自动部署。
