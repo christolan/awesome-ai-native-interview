@@ -24,6 +24,7 @@ AI Native 工程师面试题库
 | [2026-05-04](daily/2026-05-04.md) | Reasoning Model 运作机制（thinking tokens） |
 | [2026-05-05](daily/2026-05-05.md) | ReAct 模式（Reasoning + Acting） |
 | [2026-05-06](daily/2026-05-06.md) | RAG 生产环境常见失败模式与排查 |
+| [2026-05-07](daily/2026-05-07.md) | KV Cache 原理与自回归生成加速 |
 
 ---
 
