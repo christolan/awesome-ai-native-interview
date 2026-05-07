@@ -13,7 +13,6 @@
 | 目录 | 用途 |
 |------|------|
 | `daily/` | 每日训练记录，`YYYY-MM-DD.md` |
-| `templates/` | 写作模板（不直接修改） |
 
 ## 每日面试工作流
 
@@ -40,11 +39,25 @@
 
 ### 4. 归档
 
-按仓库模板创建 `daily/YYYY-MM-DD.md`：
+按以下结构创建 `daily/YYYY-MM-DD.md`：
 
-> **归档模板**：`templates/daily-question.md`
+```markdown
+# YYYY-MM-DD
 
-模板只有 4 个 section：**Question → Your Answer → Review → Improved Answer**。不要添加 Expected points、Why this matters、Decision 等非模板字段。
+## Question
+<!-- write question here -->
+
+## Your Answer
+<!-- write your answer here -->
+
+## Review
+<!-- feedback -->
+
+## Improved Answer
+<!-- refined answer -->
+```
+
+归档文件只有 4 个 section：**Question → Your Answer → Review → Improved Answer**。不要添加 Expected points、Why this matters、Decision 等非模板字段。
 
 注意事项：
 
