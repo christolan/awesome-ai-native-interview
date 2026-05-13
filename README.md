@@ -30,6 +30,7 @@ AI Native 工程师面试题库
 | [2026-05-10](daily/2026-05-10.md) | 客服工单助手的 Tool Call Evaluation |
 | [2026-05-11](daily/2026-05-11.md) | AI Coding Agent 改动范围控制 |
 | [2026-05-12](daily/2026-05-12.md) | Agent 工具调用权限控制 |
+| [2026-05-13](daily/2026-05-13.md) | AI Coding Agent 的 implementation plan 判断机制 |
 
 ---
 
