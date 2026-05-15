@@ -12,7 +12,8 @@
 
 | 目录 | 用途 |
 |------|------|
-| `daily/` | 每日训练记录，`YYYY-MM-DD.md` |
+| `docs/` | 静态站点内容根目录 |
+| `docs/daily/` | 每日训练记录，`YYYY-MM-DD.md` |
 
 ## 面试定位与核心重点
 
@@ -51,7 +52,7 @@
 ### 1. 出题
 
 - **出题方向**：以 AI Application Layer 为主线，重点覆盖 Context Engineering / RAG / Tool Use / Workflow / Agent / Evaluation / Observability / AI Product Design；LLM 原理只作为应用层必要背景
-- 出题前查看仓库 `index.md` 中的过往题目索引，避免重复问题
+- 出题前查看仓库 `docs/index.md` 中的过往题目索引，避免重复问题
 - 每题聚焦一个核心主题，避免一次考察过多无关概念
 - 题目应偏面试问法，鼓励用户解释原理、权衡和工程影响
 - 可包含 2-4 个引导维度，但不要在出题时暴露参考答案
@@ -71,7 +72,7 @@
 
 ### 4. 归档
 
-按以下结构创建 `daily/YYYY-MM-DD.md`：
+按以下结构创建 `docs/daily/YYYY-MM-DD.md`：
 
 ```markdown
 # YYYY-MM-DD
@@ -93,10 +94,10 @@
 
 注意事项：
 
-- 归档时必须同步更新 `index.md` 的「面试题索引」，追加当天题目
+- 归档时必须同步更新 `docs/index.md` 的「面试题索引」，追加当天题目
 - 用户回答一字不落的记录下来，不要做任何加工润色，直接复制
 - 如果点评后用户继续追问或要求修正参考答案，则归档前必须先把完整归档内容发给用户确认
-- 用户追问本身不写入 `daily` 文件，只把追问带来的修正体现在 `Improved Answer` 中
+- 用户追问本身不写入 `docs/daily` 文件，只把追问带来的修正体现在 `Improved Answer` 中
 
 ## 核心规范
 

@@ -4,11 +4,11 @@ AI Native 工程师面试题库：围绕 Context Engineering、RAG、Tool Use、
 
 ## 在线站点
 
-本仓库使用 [Rspress](https://rspress.rs/zh/guide/start/introduction) 编译静态文档站点，站点首页内容维护在 [`index.md`](index.md)。
+本仓库使用 [Rspress](https://rspress.rs/zh/guide/start/introduction) 编译静态文档站点，站点首页内容维护在 [`docs/index.md`](docs/index.md)。
 
 - Cloudflare Pages: <https://awesome-ai-native-interview.pages.dev/>
-- 面试题索引与核心概念：[`index.md`](index.md)
-- 每日训练记录：[`daily/`](daily/)
+- 面试题索引与核心概念：[`docs/index.md`](docs/index.md)
+- 每日训练记录：[`docs/daily/`](docs/daily/)
 
 ## 本地静态站点预览
 
