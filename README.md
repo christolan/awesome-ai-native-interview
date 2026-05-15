@@ -6,6 +6,25 @@ AI Native 工程师面试题库
 
 ---
 
+## 本地静态站点预览
+
+本仓库使用 [Rspress](https://rspress.rs/zh/guide/start/introduction) 编译静态文档站点。
+
+```bash
+npm install
+npm run dev
+```
+
+静态资源编译：
+
+```bash
+npm run build
+```
+
+构建产物输出到 `doc_build/`。
+
+---
+
 ## 面试题索引
 
 | 日期 | 题目 |
