@@ -31,6 +31,7 @@ AI Native 工程师面试题库
 | [2026-05-13](daily/2026-05-13.md) | AI Coding Agent 的 implementation plan 判断机制 |
 | [2026-05-14](daily/2026-05-14.md) | AI Coding Agent 的 test selection 与 verification boundary |
 | [2026-05-15](daily/2026-05-15.md) | Logits / Softmax / Token Probability 与 Temperature |
+| [2026-05-16](daily/2026-05-16.md) | 模型幻觉（hallucination）的成因与治理 |
 
 ## 核心概念
 
