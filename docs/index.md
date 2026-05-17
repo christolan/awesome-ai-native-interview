@@ -6,6 +6,10 @@ AI Native 工程师面试题库
 
 ## 面试题索引
 
+### [2026-05-18｜Position Encoding / RoPE 与长上下文能力](daily/2026-05-18.md)
+
+摘要：考察 position encoding 在 Transformer 中注入顺序信息的必要性，理解 RoPE 如何通过 Query / Key 旋转表达相对位置关系，以及长上下文扩展中的外推和 scaling 问题。
+
 ### [2026-05-17｜Self-Attention 机制与上下文表示](daily/2026-05-17.md)
 
 摘要：考察 self-attention 如何通过 Query / Key / Value 和 attention score 建模 token 间关系，形成上下文化表示，并理解其相对 RNN 的长距离依赖优势与计算代价。
