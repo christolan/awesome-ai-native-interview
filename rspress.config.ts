@@ -4,6 +4,7 @@ export default defineConfig({
   root: 'docs',
   title: 'AI Native 面试题库',
   description: '面向 AI Native 工程师的面试训练与核心概念归档',
+  icon: '/favicon.png',
   outDir: 'doc_build',
   route: {
     extensions: ['.md', '.mdx'],
