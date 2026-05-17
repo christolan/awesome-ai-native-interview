@@ -6,6 +6,10 @@ AI Native 工程师面试题库
 
 ## 面试题索引
 
+### [2026-05-17｜Self-Attention 机制与上下文表示](daily/2026-05-17.md)
+
+摘要：考察 self-attention 如何通过 Query / Key / Value 和 attention score 建模 token 间关系，形成上下文化表示，并理解其相对 RNN 的长距离依赖优势与计算代价。
+
 ### [2026-05-16｜模型幻觉（hallucination）的成因与治理](daily/2026-05-16.md)
 
 摘要：考察 hallucination 的定义、与普通错误的区别、从自回归生成机制看其成因，以及通过 RAG、工具校验、约束生成、评估监控等工程手段降低幻觉。
