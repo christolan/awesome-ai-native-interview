@@ -4,6 +4,10 @@
 
 AI Native 工程师面试题库
 
+## 核心概念
+
+- [核心概念词典](core-concepts.md)
+
 ## 面试题索引
 
 ### [2026-05-18｜Position Encoding / RoPE 与长上下文能力](daily/2026-05-18.md)
@@ -109,7 +113,3 @@ AI Native 工程师面试题库
 ### [2026-04-22｜流式输出（streaming response）与即时展示的重要性](daily/2026-04-22.md)
 
 摘要：考察 streaming response 的定义、与传统 request-response 的区别，以及它在 LLM 逐 token 生成场景下对用户体验、前端增量渲染和中断交互的影响。
-
-## 核心概念
-
-- [查看核心概念词典](core-concepts.md)
