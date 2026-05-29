@@ -10,6 +10,10 @@ AI Native 工程师面试题库
 
 ## 面试题索引
 
+### [2026-05-29｜Transformer 中 FFN / MLP 层的作用](daily/2026-05-29.md)
+
+摘要：考察 FFN / MLP 在 Transformer block 中对每个 token hidden state 做非线性特征变换的作用，理解它与 self-attention 的职责分工、position-wise 特性，以及对参数量、计算量和表达能力的影响。
+
 ### [2026-05-18｜Position Encoding / RoPE 与长上下文能力](daily/2026-05-18.md)
 
 摘要：考察 position encoding 在 Transformer 中注入顺序信息的必要性，理解 RoPE 如何通过 Query / Key 旋转表达相对位置关系，以及长上下文扩展中的外推和 scaling 问题。
